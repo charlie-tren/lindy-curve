@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Lindy Curve - does an old book stay read?</title>
+<meta name="description" content="Every book on Project Gutenberg plotted by age against how much it is read this month. The classic Lindy curve says old ideas endure. 67,488 works say age predicts almost nothing - and the reason is worth seeing.">
+<link rel="canonical" href="https://charlietrenorden.com/lindy-curve/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="The Lindy Curve">
+<meta property="og:url" content="https://charlietrenorden.com/lindy-curve/">
+<meta property="og:description" content="Every book on Project Gutenberg plotted by age against how much it is read this month. The classic Lindy curve says old ideas endure. 67,488 works say age predicts almost nothing - and the reason is worth seeing.">
+<meta property="og:image" content="https://charlietrenorden.com/lindy-curve/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231B1611'/><path d='M4 8 C10 20 18 25 28 26' fill='none' stroke='%23C9A961' stroke-width='2.6'/></svg>">
+<style>
+:root{
+  --ground:#1B1611; --panel:#221C15; --ink:#EDE3CE; --dim:#A08F72; --faint:#6E6049;
+  --rule:#3B3125; --gilt:#C9A961; --ox:#B4453A;
+  --c0:#8FA9BC; --c1:#7FA88F; --c2:#C9A961; --c3:#C2764C; --c4:#A88BA8;
+  --body:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+  --disp:"Arial Narrow","Helvetica Neue",Helvetica,sans-serif;
+  --mono:"Courier New",Courier,monospace;
+}
+/* The light counterpart. Designed, not inverted: the V1 Reading Room palette. */
+@media (prefers-color-scheme:light){
+  :root{
+    --ground:#EFE8DA; --panel:#E6DDCA; --ink:#2A2723; --dim:#6C6459; --faint:#9A8F7C;
+    --rule:#C3B79E; --gilt:#7A5A22; --ox:#A8452F;
+    --c0:#3E5C6B; --c1:#2F5C4A; --c2:#8A6A22; --c3:#A8492A; --c4:#6B4A63;
+  }
+}
+:root[data-theme="light"]{
+  --ground:#EFE8DA; --panel:#E6DDCA; --ink:#2A2723; --dim:#6C6459; --faint:#9A8F7C;
+  --rule:#C3B79E; --gilt:#7A5A22; --ox:#A8452F;
+  --c0:#3E5C6B; --c1:#2F5C4A; --c2:#8A6A22; --c3:#A8492A; --c4:#6B4A63;
+}
+:root[data-theme="dark"]{
+  --ground:#1B1611; --panel:#221C15; --ink:#EDE3CE; --dim:#A08F72; --faint:#6E6049;
+  --rule:#3B3125; --gilt:#C9A961; --ox:#B4453A;
+  --c0:#8FA9BC; --c1:#7FA88F; --c2:#C9A961; --c3:#C2764C; --c4:#A88BA8;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+     font:400 17px/1.62 var(--body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1060px;margin:0 auto;padding:2.4rem 1.15rem 4.4rem}
+a{color:var(--gilt);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--gilt);outline-offset:3px}
+
+.mast{display:flex;align-items:baseline;justify-content:space-between;gap:1.15rem;
+      flex-wrap:wrap;border-bottom:1px solid var(--rule);padding-bottom:.8rem}
+.wm{font:400 clamp(26px,5vw,36px)/1 var(--body);font-variant:small-caps;
+    letter-spacing:.075em}
+nav{display:flex;gap:1.1rem}
+nav button{background:none;border:0;padding:.25rem 0 .3rem;cursor:pointer;color:var(--dim);
+  font:400 10.5px/1 var(--body);letter-spacing:.14em;text-transform:uppercase;
+  border-bottom:2px solid transparent}
+nav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ox)}
+nav button:hover{color:var(--ink)}
+
+.lede{margin:1.5rem 0 0;max-width:64ch;color:var(--dim);font-size:1.08rem}
+.lede b{color:var(--ink);font-weight:400}
+h2{font:700 clamp(1rem,2.2vw,1.15rem)/1.2 var(--disp);letter-spacing:.15em;
+   text-transform:uppercase;margin:0}
+h3{font:400 1.15rem/1.25 var(--body);margin:0}
+p{margin:0;max-width:66ch}
+.sub{font-size:.93rem;color:var(--dim)}
+.k{font:400 .78rem/1.5 var(--mono);letter-spacing:.04em;color:var(--dim)}
+
+.view{margin-top:2.4rem;display:none;flex-direction:column;gap:1.15rem}
+.view.on{display:flex}
+figure{margin:0;overflow-x:auto}
+figure svg{width:100%;height:auto;display:block;min-width:540px}
+.card{background:var(--panel);border:1px solid var(--rule);padding:1.15rem;
+      display:flex;flex-direction:column;gap:.7rem}
+.card>*{min-width:0}
+.stamp{font:700 9px/1.5 var(--disp);letter-spacing:.16em;text-transform:uppercase;
+       color:var(--faint);align-self:flex-start;border:1px solid var(--faint);
+       padding:3px 6px 2px}
+
+/* ------------------------------------------------- the control, and the readout */
+.ctl{background:var(--panel);border:1px solid var(--rule);padding:1.15rem;
+     display:grid;gap:1.15rem;grid-template-columns:minmax(0,1fr) minmax(210px,auto);
+     align-items:start}
+.ctl label{display:flex;flex-direction:column;gap:.5rem}
+.ctl .lab{font:700 9.5px/1.5 var(--disp);letter-spacing:.15em;text-transform:uppercase;
+          color:var(--gilt)}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;
+  background:transparent;height:22px;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--rule);
+  border-radius:2px}
+input[type=range]::-moz-range-track{height:4px;background:var(--rule);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+  width:16px;height:16px;margin-top:-6px;border-radius:50%;background:var(--ox);
+  border:2px solid var(--ground)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+  background:var(--ox);border:2px solid var(--ground)}
+.ticks{display:flex;justify-content:space-between;font:400 9px/1 var(--mono);
+       color:var(--faint)}
+.out{display:flex;flex-direction:column;gap:.15rem;text-align:right}
+.rho{font:400 clamp(30px,6vw,42px)/1 var(--body);letter-spacing:-.01em;
+     font-variant-numeric:tabular-nums}
+.rho.pos{color:var(--c1)} .rho.neg{color:var(--ox)} .rho.nil{color:var(--dim)}
+.verdict{font:700 9.5px/1.4 var(--disp);letter-spacing:.14em;text-transform:uppercase}
+.nread{font:400 .8rem/1.5 var(--mono);color:var(--dim)}
+
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:right;padding:.34rem .5rem;border-bottom:1px solid var(--rule)}
+th:first-child,td:first-child{text-align:left}
+th{font:700 9px/1.6 var(--disp);letter-spacing:.14em;text-transform:uppercase;
+   color:var(--dim)}
+td{font-variant-numeric:tabular-nums}
+.tw{overflow-x:auto}
+
+details{border-top:1px solid var(--rule);padding-top:.8rem}
+summary{cursor:pointer;font:700 10px/1.5 var(--disp);letter-spacing:.15em;
+        text-transform:uppercase;color:var(--gilt)}
+details p{margin-top:.7rem;font-size:.93rem;color:var(--dim)}
+details p b{color:var(--ink)}
+.method{margin-top:3rem;display:flex;flex-direction:column;gap:.8rem}
+footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
+       display:flex;justify-content:space-between;gap:1.15rem;flex-wrap:wrap;
+       font-size:.88rem;color:var(--dim)}
+
+.g{stroke:var(--rule);stroke-width:1}
+.ax{font:400 10px var(--mono);fill:var(--dim)}
+.axl{font:700 9px var(--disp);letter-spacing:.16em;fill:var(--dim)}
+.sp{stroke-width:0}
+.cv{fill:none;stroke:var(--gilt);stroke-width:2.2}
+.cvf{fill:var(--gilt);opacity:.09}
+.mk{fill:var(--ox)}
+.mkl{font:400 10.5px var(--body);fill:var(--ink)}
+.note{font:italic 400 12.5px var(--body);fill:var(--dim)}
+.lead{stroke:var(--dim);stroke-width:1}
+.pt{fill:var(--gilt)}
+.pt.lo{fill:var(--faint)}
+.hi{fill:var(--ox)}
+.lbl{font:400 10px var(--body);fill:var(--ink)}
+.rg{stroke:var(--gilt);stroke-width:1.1;fill:var(--gilt);fill-opacity:.16}
+.cl{font:700 10px var(--disp);letter-spacing:.11em;fill:var(--ink)}
+.nn{font:400 8.5px var(--mono);fill:var(--faint)}
+.med{fill:none;stroke:var(--ox);stroke-width:2}
+.medpt{fill:var(--ox)}
+@media (max-width:640px){
+  .ctl{grid-template-columns:1fr}
+  .out{text-align:left}
+}
+@media (prefers-reduced-motion:no-preference){
+  .cv{stroke-dasharray:2400;stroke-dashoffset:2400;animation:draw 1.6s ease-out forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="mast">
+  <span class="wm">The Lindy Curve</span>
+  <nav role="tablist" aria-label="Views">
+    <button role="tab" id="t-curve" aria-selected="true" aria-controls="v-curve">The curve</button>
+    <button role="tab" id="t-scatter" aria-selected="false" aria-controls="v-scatter">Scatter</button>
+    <button role="tab" id="t-ridge" aria-selected="false" aria-controls="v-ridge">Ridgeline</button>
+  </nav>
+</header>
+
+<p class="lede">The Lindy effect says that for things which do not perish, age is
+evidence of staying power: what has already lasted a century is a fair bet to last
+another. Books are the cleanest test available, because Project Gutenberg publishes how
+many times each of its texts was downloaded in the last thirty days.
+<b>So here are %%WORKS%% of them, plotted by age against how much they are actually
+being read right now.</b></p>
+
+<!-- ============================================================ the curve -->
+<section class="view on" id="v-curve" role="tabpanel" aria-labelledby="t-curve">
+
+  <figure>%%HERO%%</figure>
+
+  <div class="card">
+    <span class="stamp">Illustration, not a fit</span>
+    <p class="sub">That is the shape the idea predicts, with real works placed along it by
+    age. The curve itself is drawn rather than measured - which matters, because when you
+    measure it, this is not what comes out.</p>
+  </div>
+
+  <div class="ctl">
+    <label for="floor">
+      <span class="lab" id="flab">Counting every work in the corpus</span>
+      <input type="range" id="floor" min="0" max="%%MAXI%%" value="0" step="1"
+             aria-describedby="fh">
+      <span class="ticks" id="ticks"></span>
+      <span class="sub" id="fh">Gutenberg's counts have a floor: %%BASELINE%%% of the whole
+      corpus sits between 300 and 600 downloads a month, far too uniformly across
+      %%UNDER600%% mostly obscure works to be human readership, and Gutenberg does not
+      document what it is. Raise the threshold through it and watch the relationship
+      change sign.</span>
+    </label>
+    <div class="out">
+      <span class="k">Age vs downloads, Spearman</span>
+      <span class="rho" id="rho">+0.110</span>
+      <span class="verdict" id="verdict"></span>
+      <span class="nread" id="nread"></span>
+    </div>
+  </div>
+
+  <figure><svg id="medchart" viewBox="0 0 960 340" role="img"
+    aria-label="Median downloads per surviving work, by century"></svg></figure>
+
+  <div class="card">
+    <h3>What the measurement actually says</h3>
+    <p class="sub">Nothing much, and that is the finding. Across the whole corpus the
+    correlation is <b>+0.110</b> - older works read slightly more. Exclude the baseline
+    band and it falls to <b>-0.101</b> at a thousand downloads a month, then wanders back
+    across zero as the threshold climbs. <b>A relationship whose sign depends on where you
+    draw an arbitrary line is not a relationship.</b> On this evidence, how old a surviving
+    book is tells you almost nothing about how much it is read.</p>
+    <p class="sub">Which is not quite the same as saying the Lindy effect is wrong. It says
+    this dataset cannot test it - and the reason is in the methodology below, because the
+    books that failed the test are not in the data at all.</p>
+  </div>
+</section>
+
+<!-- =========================================================== the scatter -->
+<section class="view" id="v-scatter" role="tabpanel" aria-labelledby="t-scatter">
+  <figure><svg id="scatter" viewBox="0 0 960 470" role="img"
+    aria-label="Every work by age against downloads, log scales"></svg></figure>
+  <div class="card">
+    <h3>One dot per work</h3>
+    <p class="sub">Both axes are logarithmic, because the most-read book is over four
+    hundred times the median. The dense band across the bottom is the baseline the slider
+    cuts through; the named works are the ones most people would recognise. What there
+    isn't, at any threshold, is a slope. The plot is a uniform sample rather than all
+    %%WORKS%% works, so the cloud's shape is honest even though the rarest points are
+    thinned.</p>
+    <p class="k" id="scatnote"></p>
+  </div>
+</section>
+
+<!-- ========================================================== the ridgeline -->
+<section class="view" id="v-ridge" role="tabpanel" aria-labelledby="t-ridge">
+  <figure><svg id="ridge" viewBox="0 0 960 560" role="img"
+    aria-label="Distribution of downloads per century, stacked oldest at the bottom"></svg></figure>
+  <div class="card">
+    <h3>The distribution, century by century</h3>
+    <p class="sub">Each ridge is one century's spread of monthly downloads, oldest at the
+    bottom. If age drove readership the ridges would march steadily left or right. They do
+    not - they sit almost on top of one another, which is the same finding seen a different
+    way. Centuries holding fewer than twelve works are left out rather than drawn as a
+    spike; the counts are on the page so you can see which are thin.</p>
+  </div>
+</section>
+
+<!-- ========================================================== methodology -->
+<div class="method">
+  <h2>What this can and cannot show</h2>
+  <p class="sub">The honest limits, in rough order of how much they matter. Any one of
+  them is enough reason not to read a verdict on the Lindy effect off these charts.</p>
+
+  <details>
+    <summary>The books that died are not in the data</summary>
+    <p><b>This is the big one, and it cannot be fixed.</b> The Lindy claim is about
+    survival, but a catalogue of surviving texts contains no failures. Gutenberg holds
+    %%ANCIENT%% works older than five hundred years, and every one of them is there
+    because somebody thought it worth digitising. The tens of thousands of ancient works
+    that were lost, and the mass of forgotten recent ones that were not, are both absent -
+    in opposite directions. Plotting the survivors and calling the result a decay curve
+    would be measuring a selection decision, not the passage of time.</p>
+  </details>
+
+  <details>
+    <summary>The dates are the author's, not the work's</summary>
+    <p>Gutenberg publishes no composition or first-publication date - its
+    <span class="k">issued</span> field is when the file went online. So every date here is
+    derived from the author's lifespan, capped at fifty years after birth. That is a proxy
+    and it is sometimes badly wrong: E. M. Forster wrote A Room with a View in 1908 and died
+    in 1970, so a naive death-date would call a 117-year-old book 56 years old. The cap
+    reduces that error without removing it. Ancient authors carry conventional dates -
+    Homer is filed at 700 BC, which is a scholarly convention rather than a fact.</p>
+  </details>
+
+  <details>
+    <summary>The download figure is thirty days, and it has a floor</summary>
+    <p>Gutenberg documents the number as <b>"the approximate number of downloads in the
+    last 30 days (updated daily)"</b>. That is a genuine strength - it measures current
+    readership rather than accumulating since upload, so there is no advantage to having
+    been online longer. The weaknesses are that a thirty-day window is noisy and seasonal,
+    set texts spike in term time, and <b>%%BASELINE%%% of the corpus sits in a narrow band
+    between 300 and 600 downloads a month</b> which is too uniform to be readers. What
+    that baseline is, Gutenberg does not say. The slider exists because of it.</p>
+  </details>
+
+  <details>
+    <summary>Nothing after 1929, and a thin middle</summary>
+    <p>Gutenberg is public domain, so the recent decades - where most forgetting actually
+    happens - are structurally missing. There is also a genuine hollow through the medieval
+    centuries: %%MEDIEVAL%% works between 500 and 1300 AD, against %%C19%% from the 1800s
+    alone. A gap in the chart there is the catalogue, not a rendering fault.</p>
+  </details>
+
+  <details>
+    <summary>It is mostly English, and one work can appear many times</summary>
+    <p>%%ENSHARE%%% of the corpus is English, so this is really a claim about what English
+    readers still open. Gutenberg also holds multiple editions and translations of the same
+    text as separate records - four Homers appear in the oldest dozen - so a canonical work
+    can have its readership split across several entries, which pushes the famous ones
+    down rather than up.</p>
+  </details>
+
+  <details>
+    <summary>How it is built</summary>
+    <p>One request to Gutenberg's RDF feed gives the whole catalogue with download counts
+    and author dates; the gutendex API serves the same numbers but only 32 books per page,
+    which is 2,472 requests. Everything is computed once at build time into a JSON file and
+    the page is static. Correlations are Spearman with tie correction, which matters here
+    because the baseline band creates tens of thousands of ties. Rebuilt weekly, and each
+    run appends a snapshot so the seasonality becomes visible over time.</p>
+  </details>
+</div>
+
+<footer>
+  <span>Data: Project Gutenberg RDF feed, %%WORKS%% works with a datable author.
+    Rebuilt %%GENERATED%%.</span>
+  <span><a href="https://charlietrenorden.com/">Other projects</a></span>
+</footer>
+
+</div>
+<script id="data" type="application/json">%%DATA%%</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById("data").textContent);
+const NS = "http://www.w3.org/2000/svg";
+const el = (n, a = {}) => {
+  const e = document.createElementNS(NS, n);
+  for (const k in a) e.setAttribute(k, a[k]);
+  return e;
+};
+const txt = (s, a) => { const t = el("text", a); t.textContent = s; return t; };
+const clear = n => { while (n.firstChild) n.removeChild(n.firstChild); };
+const band = y => y < 1500 ? 0 : y < 1700 ? 1 : y < 1800 ? 2 : y < 1900 ? 3 : 4;
+const cLab = c => c < 0 ? Math.abs(c) + " BC" : (c === 0 ? "0-99" : c + "s");
+const fmt = n => n.toLocaleString("en-AU");
+
+/* ------------------------------------------------------------------ tabs */
+const tabs = [["t-curve", "v-curve"], ["t-scatter", "v-scatter"], ["t-ridge", "v-ridge"]];
+tabs.forEach(([t, v]) => {
+  document.getElementById(t).addEventListener("click", () => {
+    tabs.forEach(([t2, v2]) => {
+      const on = t2 === t;
+      document.getElementById(t2).setAttribute("aria-selected", on ? "true" : "false");
+      document.getElementById(v2).classList.toggle("on", on);
+    });
+    draw();
+  });
+});
+
+/* ---------------------------------------------------- median-by-century chart */
+function median(svg, st) {
+  clear(svg);
+  const W = 960, H = 340, L = 62, R = 24, T = 26, B = 62;
+  const cs = st.centuries;
+  const top = Math.max.apply(null, cs.map(c => c.med)) * 1.15;
+  const x = i => L + (cs.length < 2 ? 0 : i / (cs.length - 1)) * (W - L - R);
+  const y = v => H - B - v / top * (H - T - B);
+
+  const step = top > 4000 ? 2000 : top > 1500 ? 500 : 200;
+  for (let g = 0; g <= top; g += step) {
+    svg.appendChild(el("line", {class: "g", x1: L, y1: y(g), x2: W - R, y2: y(g)}));
+    svg.appendChild(txt(fmt(g), {class: "ax", x: L - 8, y: y(g) + 4,
+      "text-anchor": "end"}));
+  }
+  let d = "";
+  cs.forEach((c, i) => { d += (i ? " L" : "M") + x(i).toFixed(1) + "," + y(c.med).toFixed(1); });
+  svg.appendChild(el("path", {class: "med", d: d}));
+  cs.forEach((c, i) => {
+    svg.appendChild(el("circle", {class: "medpt", cx: x(i).toFixed(1),
+      cy: y(c.med).toFixed(1), r: 3.4, fill: "var(--c" + band(c.c) + ")"}));
+    if (i % Math.ceil(cs.length / 9) === 0 || i === cs.length - 1) {
+      const g = el("g", {transform: "rotate(-42 " + x(i).toFixed(1) + " " + (H - B + 16) + ")"});
+      g.appendChild(txt(cLab(c.c), {class: "ax", x: x(i).toFixed(1), y: H - B + 16,
+        "text-anchor": "end"}));
+      svg.appendChild(g);
+    }
+    const tt = el("title");
+    tt.textContent = cLab(c.c) + ": median " + fmt(c.med) + " downloads, " + fmt(c.n) + " works";
+    const hit = el("circle", {cx: x(i).toFixed(1), cy: y(c.med).toFixed(1), r: 11,
+      fill: "transparent"});
+    hit.appendChild(tt);
+    svg.appendChild(hit);
+  });
+  svg.appendChild(el("line", {class: "g", x1: L, y1: H - B, x2: W - R, y2: H - B}));
+  svg.appendChild(txt("MEDIAN DOWNLOADS PER SURVIVING WORK, BY CENTURY",
+    {class: "axl", x: L, y: T - 10}));
+  svg.appendChild(txt("older", {class: "axl", x: L, y: H - 8}));
+  svg.appendChild(txt("newer", {class: "axl", x: W - R, y: H - 8, "text-anchor": "end"}));
+}
+
+/* ------------------------------------------------------------------ scatter */
+function scatter(svg, floor) {
+  clear(svg);
+  const W = 960, H = 470, L = 58, R = 122, T = 26, B = 52;
+  const x0 = Math.log10(5), x1 = Math.log10(3200);
+  const y0 = Math.log10(60), y1 = Math.log10(200000);
+  const px = v => L + (v - x0) / (x1 - x0) * (W - L - R);
+  const py = v => H - B - (v - y0) / (y1 - y0) * (H - T - B);
+
+  [10, 100, 1000].forEach(dec => [1, 2, 5].forEach(m => {
+    const v = Math.log10(dec * m);
+    if (v < x0 || v > x1) return;
+    svg.appendChild(el("line", {class: "g", x1: px(v), y1: T, x2: px(v), y2: H - B}));
+    svg.appendChild(txt(fmt(dec * m), {class: "ax", x: px(v), y: H - B + 18,
+      "text-anchor": "middle"}));
+  }));
+  [100, 1000, 10000, 100000].forEach(v => {
+    svg.appendChild(el("line", {class: "g", x1: L, y1: py(Math.log10(v)), x2: W - R,
+      y2: py(Math.log10(v))}));
+    svg.appendChild(txt(v >= 1000 ? (v / 1000) + "k" : v, {class: "ax", x: L - 7,
+      y: py(Math.log10(v)) + 4, "text-anchor": "end"}));
+  });
+
+  let shown = 0;
+  D.scatter.points.forEach(p => {
+    const lx = Math.log10(p.a), ly = Math.log10(p.d);
+    if (lx < x0 || lx > x1 || ly < y0 || ly > y1) return;
+    const on = p.d >= floor;
+    if (on) shown++;
+    svg.appendChild(el("circle", {class: "pt sp" + (on ? "" : " lo"),
+      cx: px(lx).toFixed(1), cy: py(ly).toFixed(1), r: on ? 2.3 : 1.4,
+      opacity: on ? .5 : .16}));
+  });
+  D.callouts.slice(0, 9).forEach(c => {
+    const lx = Math.log10(c.a), ly = Math.log10(c.d);
+    if (lx < x0 || lx > x1 || ly < y0 || ly > y1) return;
+    svg.appendChild(el("circle", {class: "hi", cx: px(lx).toFixed(1),
+      cy: py(ly).toFixed(1), r: 4}));
+    svg.appendChild(txt(c.n, {class: "lbl", x: (px(lx) + 7).toFixed(1),
+      y: (py(ly) + 3.5).toFixed(1)}));
+  });
+  svg.appendChild(txt("AGE IN YEARS", {class: "axl", x: L, y: H - 6}));
+  svg.appendChild(txt("DOWNLOADS PER MONTH", {class: "axl", x: L, y: T - 8}));
+  document.getElementById("scatnote").textContent =
+    "Every " + D.scatter.meta.stride + "th work by catalogue number - " +
+    fmt(D.scatter.meta.kept) + " of " + fmt(D.scatter.meta.of) +
+    ", sampled on one uniform stride so the density you see is the real density. " +
+    fmt(shown) + " sit above the current threshold. Named works are drawn on top.";
+}
+
+/* ---------------------------------------------------------------- ridgeline */
+function ridge(svg, st) {
+  clear(svg);
+  const W = 960, H = 560, L = 104, R = 26, T = 44, B = 48;
+  const rows = st.ridge.rows.slice().reverse();       // oldest at the bottom
+  if (!rows.length) return;
+  const stepY = (H - T - B) / Math.max(1, rows.length - 1);
+  const lo = st.ridge.lo, hi = st.ridge.hi;
+  const px = v => L + (v - lo) / (hi - lo) * (W - L - R);
+
+  [100, 1000, 10000, 100000].forEach(v => {
+    const lx = Math.log10(v);
+    if (lx < lo || lx > hi) return;
+    svg.appendChild(el("line", {class: "g", x1: px(lx), y1: T - 12, x2: px(lx), y2: H - B + 6}));
+    svg.appendChild(txt(v >= 1000 ? (v / 1000) + "k" : v, {class: "ax", x: px(lx),
+      y: H - B + 22, "text-anchor": "middle"}));
+  });
+  rows.forEach((r, i) => {
+    const base = T + i * stepY, amp = stepY * 1.35;
+    let d = "M" + L + "," + base.toFixed(1);
+    r.h.forEach((v, j) => {
+      d += " L" + (L + j / (r.h.length - 1) * (W - L - R)).toFixed(1) +
+           "," + (base - v * amp).toFixed(1);
+    });
+    d += " L" + (W - R) + "," + base.toFixed(1) + " Z";
+    const p = el("path", {class: "rg", d: d,
+      stroke: "var(--c" + band(r.c) + ")", fill: "var(--c" + band(r.c) + ")"});
+    const tt = el("title");
+    tt.textContent = cLab(r.c) + ": " + fmt(r.n) + " works, median " + fmt(r.med);
+    p.appendChild(tt);
+    svg.appendChild(p);
+    svg.appendChild(txt(cLab(r.c), {class: "cl", x: L - 12, y: (base - 2).toFixed(1),
+      "text-anchor": "end"}));
+    svg.appendChild(txt("n=" + fmt(r.n), {class: "nn", x: L - 12,
+      y: (base + 11).toFixed(1), "text-anchor": "end"}));
+  });
+  svg.appendChild(txt("DOWNLOADS PER MONTH, LOG SCALE - OLDEST AT THE BOTTOM",
+    {class: "axl", x: L, y: T - 24}));
+}
+
+/* -------------------------------------------------------------------- state */
+const slider = document.getElementById("floor");
+function state() { return D.states[Math.min(slider.value, D.states.length - 1)]; }
+
+function draw() {
+  const st = state();
+  median(document.getElementById("medchart"), st);
+  scatter(document.getElementById("scatter"), st.floor);
+  ridge(document.getElementById("ridge"), st);
+}
+
+function readout() {
+  const st = state();
+  const r = st.rho;
+  const box = document.getElementById("rho");
+  box.textContent = (r >= 0 ? "+" : "−") + Math.abs(r).toFixed(3);
+  box.className = "rho " + (Math.abs(r) < 0.03 ? "nil" : r > 0 ? "pos" : "neg");
+  document.getElementById("verdict").textContent =
+    Math.abs(r) < 0.03 ? "no relationship at all"
+      : r > 0 ? "older works read slightly more"
+      : "older works read slightly less";
+  document.getElementById("flab").textContent = st.floor === 0
+    ? "Counting every work in the corpus"
+    : "Ignoring works read fewer than " + fmt(st.floor) + " times a month";
+  document.getElementById("nread").textContent =
+    fmt(st.n) + " works · median " + fmt(st.med) + " a month";
+}
+
+const ticks = document.getElementById("ticks");
+[D.states[0], D.states[Math.floor(D.states.length / 2)], D.states[D.states.length - 1]]
+  .forEach(s => {
+    const b = document.createElement("span");
+    b.textContent = fmt(s.floor);
+    ticks.appendChild(b);
+  });
+
+slider.max = String(D.states.length - 1);
+slider.addEventListener("input", () => { readout(); draw(); });
+readout();
+draw();
+</script>
+</body>
+</html>
