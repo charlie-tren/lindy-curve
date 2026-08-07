@@ -72,7 +72,7 @@ function userPos(svg, ev, W, H) {
 }
 
 /* -------------------------------------------------------------------- tabs */
-const tabs = [["t-curve", "v-curve"], ["t-scatter", "v-scatter"], ["t-ridge", "v-ridge"]];
+const tabs = [["t-curve", "v-curve"], ["t-scatter", "v-scatter"]];
 tabs.forEach(function (pair) {
   document.getElementById(pair[0]).addEventListener("click", function () {
     tabs.forEach(function (p2) {
@@ -91,17 +91,26 @@ const SH = {W: 960, H: 260};
 function shelf(st) {
   clear(svgShelf);
   tipShelf.reset();
-  const W = SH.W, H = SH.H, L = 10, R = 10, T = 12, B = 30;
+  const W = SH.W, H = SH.H, L = 10, R = 10, T = 16, B = 30;
   const bars = st.shelf.bars, slots = st.shelf.slots;
   if (!bars.length) return;
   const top = Math.log10(Math.max.apply(null, bars.map(b => b.d)) * 1.1);
   const bot = Math.log10(Math.max(60, Math.min.apply(null, bars.map(b => b.d)))) * 0.985;
-  const bw = (W - L - R) / slots;
+  const bw = (W - L - R - 38) / slots;
+  const yv = v => H - B - (Math.log10(v) - bot) / (top - bot) * (H - T - B);
+  [300, 1000, 3000, 10000, 30000, 100000].forEach(function (v) {
+    const lv = Math.log10(v);
+    if (lv < bot || lv > top) return;
+    svgShelf.appendChild(el("line", {class: "g", x1: L + 34, y1: yv(v).toFixed(1),
+      x2: W - R, y2: yv(v).toFixed(1)}));
+    svgShelf.appendChild(txt(yLab(v), {class: "ax", x: L + 30, y: (yv(v) + 4).toFixed(1),
+      "text-anchor": "end"}));
+  });
   bars.forEach(function (b) {
     const h = (Math.log10(b.d) - bot) / (top - bot) * (H - T - B);
     // k rises WITH age, so k=0 (newest) sits at the LEFT, matching this chart's own
     // labels and the curve above it. Reversing it put ancient works under "newest".
-    const x = L + b.k * bw;
+    const x = L + 38 + b.k * ((W - L - R - 38) / slots);
     const t = D.titles[b.i] || ["?", ""];
     svgShelf.appendChild(el("rect", {x: (x + bw * 0.15).toFixed(1),
       y: (H - B - h).toFixed(1), width: (bw * 0.7).toFixed(1),
@@ -110,9 +119,9 @@ function shelf(st) {
     tipShelf.add(x + bw / 2, H - B - h, t[0],
       (t[1] ? t[1] + DOT : "") + yrLab(b.y) + DOT + fmt(b.d) + " readers a month");
   });
-  svgShelf.appendChild(el("line", {class: "g", x1: L, y1: H - B + 4, x2: W - R,
+  svgShelf.appendChild(el("line", {class: "g", x1: L + 38, y1: H - B + 4, x2: W - R,
     y2: H - B + 4}));
-  svgShelf.appendChild(txt("NEWEST", {class: "axl", x: L + 2, y: H - 10}));
+  svgShelf.appendChild(txt("NEWEST", {class: "axl", x: L + 40, y: H - 10}));
   svgShelf.appendChild(txt("HEIGHT = READERS A MONTH", {class: "axl", x: W / 2, y: H - 10,
     "text-anchor": "middle"}));
   svgShelf.appendChild(txt("OLDEST", {class: "axl", x: W - R - 2, y: H - 10,
@@ -131,17 +140,30 @@ function median(st) {
   clear(svgMed);
   tipMed.reset();
   const W = MD.W, H = MD.H, L = 66, R = 24, T = 26, B = 62;
-  const cs = st.centuries;
+  // reversed: newest on the LEFT, oldest on the RIGHT, matching the curve and the shelf.
+  // Ascending-by-year put it in the opposite direction to both of them on the same page.
+  const cs = st.centuries.slice().reverse();
   if (!cs.length) return;
-  const top = Math.max.apply(null, cs.map(c => c.med)) * 1.15;
+  const lo = Math.log10(Math.max(60, Math.min.apply(null, cs.map(c => c.p25)) * 0.85));
+  const hi = Math.log10(Math.max.apply(null, cs.map(c => c.p75)) * 1.3);
   const x = i => L + (cs.length < 2 ? 0 : i / (cs.length - 1)) * (W - L - R);
-  const y = v => H - B - v / top * (H - T - B);
-  const step = top > 20000 ? 10000 : top > 4000 ? 2000 : top > 1500 ? 500 : 200;
-  for (let g = 0; g <= top; g += step) {
+  const y = v => H - B - (Math.log10(v) - lo) / (hi - lo) * (H - T - B);
+  [100, 300, 1000, 3000, 10000, 30000, 100000].forEach(function (g) {
+    if (Math.log10(g) < lo || Math.log10(g) > hi) return;
     svgMed.appendChild(el("line", {class: "g", x1: L, y1: y(g), x2: W - R, y2: y(g)}));
-    svgMed.appendChild(txt(fmt(g), {class: "ax", x: L - 8, y: y(g) + 4,
+    svgMed.appendChild(txt(yLab(g), {class: "ax", x: L - 8, y: y(g) + 4,
       "text-anchor": "end"}));
+  });
+  // the quartile band, folded in from what used to be its own tab
+  let up = "", dn = "";
+  cs.forEach(function (c, i) {
+    up += (i ? " L" : "M") + x(i).toFixed(1) + "," + y(c.p75).toFixed(1);
+  });
+  for (let i = cs.length - 1; i >= 0; i--) {
+    dn += " L" + x(i).toFixed(1) + "," + y(cs[i].p25).toFixed(1);
   }
+  svgMed.appendChild(el("path", {d: up + dn + " Z", fill: "var(--gilt)",
+    "fill-opacity": 0.15, stroke: "none"}));
   let d = "";
   cs.forEach(function (c, i) {
     d += (i ? " L" : "M") + x(i).toFixed(1) + "," + y(c.med).toFixed(1);
@@ -163,10 +185,10 @@ function median(st) {
       + fmt(c.p25) + " to " + fmt(c.p75));
   });
   svgMed.appendChild(el("line", {class: "g", x1: L, y1: H - B, x2: W - R, y2: H - B}));
-  svgMed.appendChild(txt("MEDIAN READERS A MONTH, BY CENTURY", {class: "axl", x: L,
-    y: T - 10}));
-  svgMed.appendChild(txt("older", {class: "axl", x: L, y: H - 8}));
-  svgMed.appendChild(txt("newer", {class: "axl", x: W - R, y: H - 8,
+  svgMed.appendChild(txt("MEDIAN AND MIDDLE 50% PER CENTURY, READERS A MONTH (LOG)",
+    {class: "axl", x: L, y: T - 10}));
+  svgMed.appendChild(txt("newest", {class: "axl", x: L, y: H - 8}));
+  svgMed.appendChild(txt("oldest", {class: "axl", x: W - R, y: H - 8,
     "text-anchor": "end"}));
 }
 svgMed.addEventListener("pointermove", function (ev) {
@@ -174,120 +196,6 @@ svgMed.addEventListener("pointermove", function (ev) {
 });
 svgMed.addEventListener("pointerleave", function () { tipMed.hide(); });
 
-/* ------------------------------------------ quartile bands, hover and pannable */
-const svgSpread = document.getElementById("spread");
-const tipSpread = tipper("tip2", svgSpread);
-const SP = {W: 960, H: 420, L: 66, R: 26, T: 34, B: 62};
-let win = null;
-function spread(st) {
-  clear(svgSpread);
-  tipSpread.reset();
-  const cs = st.centuries;
-  if (!cs.length) return;
-  if (!win || win[1] > cs.length - 1) win = [0, cs.length - 1];
-  const i0 = Math.max(0, Math.round(win[0]));
-  const i1 = Math.min(cs.length - 1, Math.round(win[1]));
-  const vis = cs.slice(i0, i1 + 1);
-  if (vis.length < 2) return;
-  const W = SP.W, H = SP.H, L = SP.L, R = SP.R, T = SP.T, B = SP.B;
-  const lo = Math.log10(Math.max(60, Math.min.apply(null, vis.map(c => c.p25)) * 0.8));
-  const hi = Math.log10(Math.max.apply(null, vis.map(c => c.p75)) * 1.3);
-  const x = i => L + i / (vis.length - 1) * (W - L - R);
-  const y = v => H - B - (Math.log10(v) - lo) / (hi - lo) * (H - T - B);
-
-  [100, 300, 1000, 3000, 10000, 30000, 100000].forEach(function (v) {
-    if (Math.log10(v) < lo || Math.log10(v) > hi) return;
-    svgSpread.appendChild(el("line", {class: "g", x1: L, y1: y(v), x2: W - R, y2: y(v)}));
-    svgSpread.appendChild(txt(yLab(v), {class: "ax", x: L - 8, y: y(v) + 4,
-      "text-anchor": "end"}));
-  });
-
-  let up = "", dn = "";
-  vis.forEach(function (c, i) {
-    up += (i ? " L" : "M") + x(i).toFixed(1) + "," + y(c.p75).toFixed(1);
-  });
-  for (let i = vis.length - 1; i >= 0; i--) {
-    dn += " L" + x(i).toFixed(1) + "," + y(vis[i].p25).toFixed(1);
-  }
-  svgSpread.appendChild(el("path", {d: up + dn + " Z", fill: "var(--gilt)",
-    "fill-opacity": 0.17, stroke: "none"}));
-  let m = "";
-  vis.forEach(function (c, i) {
-    m += (i ? " L" : "M") + x(i).toFixed(1) + "," + y(c.med).toFixed(1);
-  });
-  svgSpread.appendChild(el("path", {class: "med", d: m}));
-
-  // The axis was unreadable with a century AND a count on every tick. Counts moved into
-  // the tooltip, and labels thin out as more centuries come into view.
-  const every = vis.length > 14 ? 2 : 1;
-  vis.forEach(function (c, i) {
-    svgSpread.appendChild(el("circle", {class: "medpt", cx: x(i).toFixed(1),
-      cy: y(c.med).toFixed(1), r: 3, fill: "var(--c" + band(c.c) + ")"}));
-    if (i % every === 0 || i === vis.length - 1) {
-      const g = el("g", {transform: "rotate(-42 " + x(i).toFixed(1) + " "
-        + (H - B + 16) + ")"});
-      g.appendChild(txt(cLab(c.c), {class: "ax", x: x(i).toFixed(1), y: H - B + 16,
-        "text-anchor": "end"}));
-      svgSpread.appendChild(g);
-    }
-    tipSpread.add(x(i), y(c.med), cLab(c.c),
-      fmt(c.n) + " works" + DOT + "median " + fmt(c.med) + DOT + "middle half "
-      + fmt(c.p25) + " to " + fmt(c.p75));
-  });
-  svgSpread.appendChild(el("line", {class: "g", x1: L, y1: H - B, x2: W - R, y2: H - B}));
-  svgSpread.appendChild(txt("MIDDLE 50% OF EACH CENTURY, READERS A MONTH (LOG)",
-    {class: "axl", x: L, y: T - 12}));
-  svgSpread.appendChild(txt("oldest", {class: "axl", x: L, y: H - 8}));
-  svgSpread.appendChild(txt("newest", {class: "axl", x: W - R, y: H - 8,
-    "text-anchor": "end"}));
-  if ((i1 - i0) < cs.length - 1) {
-    svgSpread.appendChild(txt(vis.length + " of " + cs.length
-      + " centuries - double-click to reset", {class: "axl", x: W - R, y: T - 12,
-      "text-anchor": "end"}));
-  }
-}
-let spDrag = null;
-svgSpread.addEventListener("wheel", function (ev) {
-  ev.preventDefault();
-  const cs = state().centuries;
-  const u = userPos(svgSpread, ev, SP.W, SP.H);
-  const f = Math.min(1, Math.max(0, (u.x - SP.L) / (SP.W - SP.L - SP.R)));
-  const span = win[1] - win[0];
-  const anchor = win[0] + f * span;
-  const next = Math.min(cs.length - 1, Math.max(3, span * (ev.deltaY > 0 ? 1.25 : 0.8)));
-  win = [anchor - f * next, anchor + (1 - f) * next];
-  if (win[0] < 0) win = [0, next];
-  if (win[1] > cs.length - 1) win = [cs.length - 1 - next, cs.length - 1];
-  spread(state());
-}, {passive: false});
-svgSpread.addEventListener("pointerdown", function (ev) {
-  ev.preventDefault();
-  spDrag = {u: userPos(svgSpread, ev, SP.W, SP.H), w: win.slice()};
-  svgSpread.classList.add("drag");
-  svgSpread.setPointerCapture(ev.pointerId);
-});
-svgSpread.addEventListener("pointerup", function () {
-  spDrag = null;
-  svgSpread.classList.remove("drag");
-});
-svgSpread.addEventListener("pointermove", function (ev) {
-  const u = userPos(svgSpread, ev, SP.W, SP.H);
-  if (spDrag) {
-    const cs = state().centuries;
-    const span = spDrag.w[1] - spDrag.w[0];
-    const d = (u.x - spDrag.u.x) / (SP.W - SP.L - SP.R) * span;
-    let a = spDrag.w[0] - d, b = spDrag.w[1] - d;
-    if (a < 0) { b -= a; a = 0; }
-    if (b > cs.length - 1) { a -= b - (cs.length - 1); b = cs.length - 1; }
-    win = [Math.max(0, a), b];
-    tipSpread.hide();
-    spread(state());
-    return;
-  }
-  tipSpread.track(u, SP.W, SP.H, 22, true);
-});
-svgSpread.addEventListener("pointerleave", function () { tipSpread.hide(); });
-svgSpread.addEventListener("dblclick", function () { win = null; spread(state()); });
 
 /* --------------------------------------------- scatter: zoom, pan and hover */
 const SC = {W: 960, H: 470, L: 58, R: 122, T: 26, B: 52};
@@ -311,6 +219,12 @@ function ticks(lo, hi) {
   return out.length > 9 ? out.filter((_, i) => i % 2 === 0) : out;
 }
 
+let scQueued = false;
+function scatterSoon() {
+  if (scQueued) return;
+  scQueued = true;
+  requestAnimationFrame(function () { scQueued = false; scatter(); });
+}
 function scatter() {
   clear(svgScatter);
   tipScatter.reset();
@@ -340,7 +254,7 @@ function scatter() {
     // ONE radius for every dot. Two radii read as a distinction in the data that does
     // not exist - above and below the threshold differ in opacity only.
     svgScatter.appendChild(el("circle", {class: "pt sp" + (on ? "" : " lo"),
-      cx: X.toFixed(1), cy: Y.toFixed(1), r: 2.2, opacity: on ? 0.5 : 0.13}));
+      cx: X.toFixed(1), cy: Y.toFixed(1), r: 2.9, opacity: on ? 0.55 : 0.16}));
     tipScatter.add(X, Y, p.t || "?",
       (p.au ? p.au + DOT : "") + fmt(p.a) + " yrs old" + DOT + fmt(p.d)
       + " readers a month");
@@ -378,7 +292,7 @@ svgScatter.addEventListener("wheel", function (ev) {
   const h = Math.min(maxH, Math.max(maxH / 40, (view.y1 - view.y0) * k));
   view = {x0: ax - fx * w, x1: ax + (1 - fx) * w,
           y0: ay - fy * h, y1: ay + (1 - fy) * h};
-  scatter();
+  scatterSoon();
 }, {passive: false});
 
 let dragging = null;
@@ -401,7 +315,7 @@ svgScatter.addEventListener("pointermove", function (ev) {
              * (dragging.v.y1 - dragging.v.y0);
     view = {x0: dragging.v.x0 - dx, x1: dragging.v.x1 - dx,
             y0: dragging.v.y0 + dy, y1: dragging.v.y1 + dy};
-    scatter();
+    scatterSoon();
     tipScatter.hide();
     return;
   }
@@ -421,7 +335,6 @@ function draw() {
   const st = state();
   shelf(st);
   median(st);
-  spread(st);
   scatter();
 }
 

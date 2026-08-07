@@ -113,6 +113,39 @@ def main():
                           f"rightmost is {shelf['right']}; age must rise to the right, "
                           "matching the curve above it")
 
+                # every chart with an age axis must run newest-left, oldest-right. Three
+                # separate inversions have shipped here; this is the only check that
+                # covers the family rather than whichever chart broke last.
+                order = pg.evaluate("""() => {
+                    const bars = [...document.querySelectorAll('#shelf rect[data-year]')]
+                      .map(r => ({x: +r.getAttribute('x'), y: +r.getAttribute('data-year')}))
+                      .sort((a, b) => a.x - b.x);
+                    const labs = [...document.querySelectorAll('#medchart text.ax')]
+                      .filter(t => /BC|\d{3,4}s|0-99/.test(t.textContent))
+                      .map(t => ({x: +t.getAttribute('x'), t: t.textContent.trim()}))
+                      .sort((a, b) => a.x - b.x);
+                    const yr = s => s.includes('BC') ? -parseInt(s) : parseInt(s) || 0;
+                    return {shelf: bars.length > 3
+                              ? [bars[0].y, bars[bars.length - 1].y] : null,
+                            cent: labs.length > 2
+                              ? [yr(labs[0].t), yr(labs[labs.length - 1].t)] : null};
+                }""")
+                if check(order["shelf"], f"{tag}: shelf bars carry no year data"):
+                    check(order["shelf"][1] < order["shelf"][0],
+                          f"{tag}: SHELF AXIS INVERTED {order['shelf']} - newest left")
+                if check(order["cent"], f"{tag}: century chart has no readable labels"):
+                    check(order["cent"][1] < order["cent"][0],
+                          f"{tag}: CENTURY AXIS INVERTED {order['cent']} - must run "
+                          "newest-left like the curve and shelf above it")
+
+                # the methodology must appear once, on the first view only
+                check(pg.locator(".method").count() == 1,
+                      f"{tag}: {pg.locator('.method').count()} methodology blocks, expected 1")
+                check(pg.locator("#v-curve .method").count() == 1,
+                      f"{tag}: the methodology is not inside the curve view")
+                check(pg.locator('[role="tab"]').count() == 2,
+                      f"{tag}: {pg.locator('[role=tab]').count()} tabs, expected 2")
+
                 # every view draws something
                 counts = pg.evaluate("""() => ({
                     med: document.querySelectorAll('#medchart .medpt').length,
@@ -120,8 +153,8 @@ def main():
                     pts: document.querySelectorAll('#scatter circle.pt').length,
                     hi: document.querySelectorAll('#scatter circle.hi').length,
                     bars: document.querySelectorAll('#shelf rect').length,
-                    spread: document.querySelectorAll('#spread path').length,
-                    details: document.querySelectorAll('.method details').length,
+                    band: document.querySelectorAll('#medchart path').length,
+
                 })""")
                 check(counts["medpath"] == 1, f"{tag}: median line missing")
                 check(counts["med"] >= 20,
@@ -129,11 +162,12 @@ def main():
                 check(counts["pts"] > 4000, f"{tag}: only {counts['pts']} scatter points")
                 check(counts["hi"] >= 5, f"{tag}: only {counts['hi']} named works plotted")
                 check(counts["bars"] >= 40, f"{tag}: only {counts['bars']} shelf bars")
-                check(counts["spread"] >= 2,
-                      f"{tag}: spread chart has {counts['spread']} paths, need a band "
-                      "and a median line")
-                check(counts["details"] == 6,
-                      f"{tag}: {counts['details']} methodology sections, expected 6")
+                check(pg.locator("#shelf text.ax").count() >= 2,
+                      f"{tag}: the shelf has no y-axis labels")
+                check(counts["band"] >= 2,
+                      f"{tag}: century chart has {counts['band']} paths, needs a quartile "
+                      "band and a median line")
+
 
                 # the slider must actually change the finding, not just the label
                 before = pg.evaluate("""() => ({
@@ -161,8 +195,7 @@ def main():
                       "the page's central claim would be wrong")
 
                 # tabs
-                for tab, view in [("t-scatter", "v-scatter"), ("t-ridge", "v-ridge"),
-                                  ("t-curve", "v-curve")]:
+                for tab, view in [("t-scatter", "v-scatter"), ("t-curve", "v-curve")]:
                     pg.click(f"#{tab}")
                     pg.wait_for_timeout(120)
                     on = pg.evaluate(f"document.getElementById('{view}')"
@@ -196,8 +229,11 @@ def main():
                 # hovering a chart must actually produce a tooltip with a work in it
                 # every chart with a tooltip must fire it from ANYWHERE in its column,
                 # not only from a direct hit on a 3px marker
-                for sel, tid, name in [("#shelf rect", "tip3", "shelf"),
-                                       ("#medchart circle.medpt", "tip4", "century line")]:
+                # hover is a pointer interaction, and at 375px these charts scroll
+                # inside their figure so a given bar may be off-screen. Desktop only.
+                for sel, tid, name in ([("#shelf rect", "tip3", "shelf"),
+                                        ("#medchart circle.medpt", "tip4", "century line")]
+                                       if w >= 1280 else []):
                     # scroll it under the viewport first - mouse.move takes viewport
                     # coordinates, so an element 1,500px down is unreachable and the
                     # tooltip looks broken when it is not
@@ -209,17 +245,7 @@ def main():
                     got = pg.evaluate(
                         f"document.getElementById('{tid}').classList.contains('on')")
                     check(got, f"{tag}: hovering the {name} column produced no tooltip")
-                pg.click("#t-ridge")
-                pg.wait_for_timeout(200)
-                pg.locator("#spread").scroll_into_view_if_needed()
-                pg.wait_for_timeout(150)
-                sp = pg.locator("#spread").bounding_box()
-                pg.mouse.move(sp["x"] + sp["width"] * 0.5, sp["y"] + sp["height"] * 0.25)
-                pg.wait_for_timeout(200)
-                check(pg.evaluate("document.getElementById('tip2').classList.contains('on')"),
-                      f"{tag}: hovering the spread chart produced no tooltip")
-                pg.click("#t-curve")
-                pg.wait_for_timeout(150)
+
 
                 # the page must be legible in this theme, not just present
                 col = pg.evaluate("""() => {

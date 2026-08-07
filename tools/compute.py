@@ -38,8 +38,9 @@ ROOT = Path(__file__).resolve().parent.parent
 NOW = 2026
 
 # The floors the slider steps through. Dense where the signal changes fastest.
-FLOORS = [0, 150, 250, 300, 350, 400, 450, 500, 550, 600, 700, 800, 900, 1000,
-          1200, 1500, 2000, 2500, 3000, 4000, 5000, 7000, 10000, 15000, 25000]
+FLOORS = ([0, 100, 175, 240, 280] + list(range(300, 620, 20))
+          + list(range(620, 1050, 40)) + [1150, 1300, 1500, 1750, 2000, 2400,
+          2900, 3500, 4200, 5000, 6000, 7500, 9500, 12000, 15000, 20000, 25000])
 
 # Works worth naming on the charts: recognisable, and spread across the age axis.
 CALLOUTS = ["Moby Dick", "Pride and Prejudice", "Romeo and Juliet", "The Odyssey",
