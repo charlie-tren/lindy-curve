@@ -15,30 +15,28 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231B1611'/><path d='M4 8 C10 20 18 25 28 26' fill='none' stroke='%23C9A961' stroke-width='2.6'/></svg>">
 <style>
 :root{
-  --ground:#1B1611; --panel:#221C15; --ink:#EDE3CE; --dim:#A08F72; --faint:#6E6049;
-  --rule:#3B3125; --gilt:#C9A961; --ox:#B4453A;
-  --c0:#8FA9BC; --c1:#7FA88F; --c2:#C9A961; --c3:#C2764C; --c4:#A88BA8;
+  --ground:#EFE8DA; --panel:#E6DDCA; --ink:#2A2723; --dim:#6C6459; --faint:#9A8F7C;
+  --rule:#C3B79E; --gilt:#7A5A22; --ox:#A8452F;
+  --c0:#43605C; --c1:#2F4F45; --c2:#8C6A3F; --c3:#A8492A; --c4:#5E6660;
   --body:Georgia,"Iowan Old Style","Palatino Linotype",serif;
   --disp:"Arial Narrow","Helvetica Neue",Helvetica,sans-serif;
   --mono:"Courier New",Courier,monospace;
 }
-/* The light counterpart. Designed, not inverted: the V1 Reading Room palette. */
-@media (prefers-color-scheme:light){
-  :root{
-    --ground:#EFE8DA; --panel:#E6DDCA; --ink:#2A2723; --dim:#6C6459; --faint:#9A8F7C;
-    --rule:#C3B79E; --gilt:#7A5A22; --ox:#A8452F;
-    --c0:#3E5C6B; --c1:#2F5C4A; --c2:#8A6A22; --c3:#A8492A; --c4:#6B4A63;
-  }
+/* The dark counterpart: After Hours, designed rather than inverted. */
+@media (prefers-color-scheme:dark){:root{
+  --ground:#1B1611; --panel:#221C15; --ink:#EDE3CE; --dim:#A08F72; --faint:#6E6049;
+  --rule:#3B3125; --gilt:#C9A961; --ox:#B4453A;
+  --c0:#6E9A93; --c1:#7FA88F; --c2:#C0A067; --c3:#C2764C; --c4:#98A099;
+}}
+:root[data-theme="dark"]{
+  --ground:#1B1611; --panel:#221C15; --ink:#EDE3CE; --dim:#A08F72; --faint:#6E6049;
+  --rule:#3B3125; --gilt:#C9A961; --ox:#B4453A;
+  --c0:#6E9A93; --c1:#7FA88F; --c2:#C0A067; --c3:#C2764C; --c4:#98A099;
 }
 :root[data-theme="light"]{
   --ground:#EFE8DA; --panel:#E6DDCA; --ink:#2A2723; --dim:#6C6459; --faint:#9A8F7C;
   --rule:#C3B79E; --gilt:#7A5A22; --ox:#A8452F;
-  --c0:#3E5C6B; --c1:#2F5C4A; --c2:#8A6A22; --c3:#A8492A; --c4:#6B4A63;
-}
-:root[data-theme="dark"]{
-  --ground:#1B1611; --panel:#221C15; --ink:#EDE3CE; --dim:#A08F72; --faint:#6E6049;
-  --rule:#3B3125; --gilt:#C9A961; --ox:#B4453A;
-  --c0:#8FA9BC; --c1:#7FA88F; --c2:#C9A961; --c3:#C2764C; --c4:#A88BA8;
+  --c0:#43605C; --c1:#2F4F45; --c2:#8C6A3F; --c3:#A8492A; --c4:#5E6660;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);
@@ -118,6 +116,21 @@ summary{cursor:pointer;font:700 10px/1.5 var(--disp);letter-spacing:.15em;
 details p{margin-top:.7rem;font-size:.93rem;color:var(--dim)}
 details p b{color:var(--ink)}
 .method{margin-top:3rem;display:flex;flex-direction:column;gap:.8rem}
+a.back{text-decoration:none;display:inline-flex;align-items:center;gap:.4rem}
+a.back .arw{display:inline-block;transition:transform .25s}
+a.back:hover .arw{transform:translateX(4px)}
+.shelfwrap{position:relative}
+#scatwrap{position:relative}
+.tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
+  background:var(--ground);border:1px solid var(--rule);padding:6px 9px;
+  font:400 12px/1.4 var(--body);color:var(--ink);max-width:250px;z-index:5;
+  box-shadow:0 6px 18px -10px rgba(0,0,0,.6)}
+.tip.on{opacity:1}
+.tip b{display:block;font-weight:400;color:var(--gilt)}
+.tip span{font:400 10.5px/1.5 var(--mono);color:var(--dim)}
+.zoomhint{font:400 .78rem/1.5 var(--mono);color:var(--faint)}
+#scatter{cursor:crosshair;touch-action:none}
+#scatter.drag{cursor:grabbing}
 footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
        display:flex;justify-content:space-between;gap:1.15rem;flex-wrap:wrap;
        font-size:.88rem;color:var(--dim)}
@@ -159,16 +172,13 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
   <nav role="tablist" aria-label="Views">
     <button role="tab" id="t-curve" aria-selected="true" aria-controls="v-curve">The curve</button>
     <button role="tab" id="t-scatter" aria-selected="false" aria-controls="v-scatter">Scatter</button>
-    <button role="tab" id="t-ridge" aria-selected="false" aria-controls="v-ridge">Ridgeline</button>
+    <button role="tab" id="t-ridge" aria-selected="false" aria-controls="v-ridge">Spread</button>
   </nav>
 </header>
 
-<p class="lede">The Lindy effect says that for things which do not perish, age is
-evidence of staying power: what has already lasted a century is a fair bet to last
-another. Books are the cleanest test available, because Project Gutenberg publishes how
-many times each of its texts was downloaded in the last thirty days.
-<b>So here are %%WORKS%% of them, plotted by age against how much they are actually
-being read right now.</b></p>
+<p class="lede">Old things are supposed to endure: what has lasted a century is a fair
+bet to last another. <b>Books make that testable, because Project Gutenberg publishes how
+often each of its texts was read this month.</b> Here are %%WORKS%% of them, by age.</p>
 
 <!-- ============================================================ the curve -->
 <section class="view on" id="v-curve" role="tabpanel" aria-labelledby="t-curve">
@@ -180,6 +190,17 @@ being read right now.</b></p>
     <p class="sub">That is the shape the idea predicts, with real works placed along it by
     age. The curve itself is drawn rather than measured - which matters, because when you
     measure it, this is not what comes out.</p>
+  </div>
+
+  <figure class="shelfwrap"><svg id="shelf" viewBox="0 0 960 260" role="img"
+    aria-label="One bar per age step, height is readership"></svg></figure>
+
+  <div class="card">
+    <h3>The same works as a shelf</h3>
+    <p class="sub">One bar per step of age, tallest first-known work in each, oldest on the
+    right. Colour is the century. If age drove readership the skyline would slope; it does
+    not, and the gap in the middle is a real hollow in Gutenberg's medieval holdings rather
+    than a missing bar.</p>
   </div>
 
   <div class="ctl">
@@ -221,8 +242,11 @@ being read right now.</b></p>
 
 <!-- =========================================================== the scatter -->
 <section class="view" id="v-scatter" role="tabpanel" aria-labelledby="t-scatter">
-  <figure><svg id="scatter" viewBox="0 0 960 470" role="img"
-    aria-label="Every work by age against downloads, log scales"></svg></figure>
+  <figure id="scatwrap"><svg id="scatter" viewBox="0 0 960 470" role="img"
+    aria-label="Every work by age against downloads, log scales"></svg>
+    <div class="tip" id="tip"></div></figure>
+  <p class="zoomhint">Scroll to zoom, drag to pan, hover a point for the title,
+  double-click to reset.</p>
   <div class="card">
     <h3>One dot per work</h3>
     <p class="sub">Both axes are logarithmic, because the most-read book is over four
@@ -237,15 +261,16 @@ being read right now.</b></p>
 
 <!-- ========================================================== the ridgeline -->
 <section class="view" id="v-ridge" role="tabpanel" aria-labelledby="t-ridge">
-  <figure><svg id="ridge" viewBox="0 0 960 560" role="img"
-    aria-label="Distribution of downloads per century, stacked oldest at the bottom"></svg></figure>
+  <figure><svg id="spread" viewBox="0 0 960 420" role="img"
+    aria-label="Quartile range of downloads per century"></svg></figure>
   <div class="card">
-    <h3>The distribution, century by century</h3>
-    <p class="sub">Each ridge is one century's spread of monthly downloads, oldest at the
-    bottom. If age drove readership the ridges would march steadily left or right. They do
-    not - they sit almost on top of one another, which is the same finding seen a different
-    way. Centuries holding fewer than twelve works are left out rather than drawn as a
-    spike; the counts are on the page so you can see which are thin.</p>
+    <h3>The middle half of each century</h3>
+    <p class="sub">The band is the middle 50% of works from that century - a quarter read
+    less, a quarter read more - and the line is the median. This replaced a ridgeline, which
+    stacked the same distributions on top of each other and made them almost impossible to
+    compare. Here the answer is legible in one look: <b>the bands sit at the same height
+    across two and a half thousand years.</b> Centuries with fewer than five works are left
+    out, and the counts are on the axis so you can see which are thin.</p>
   </div>
 </section>
 
@@ -319,210 +344,13 @@ being read right now.</b></p>
 <footer>
   <span>Data: Project Gutenberg RDF feed, %%WORKS%% works with a datable author.
     Rebuilt %%GENERATED%%.</span>
-  <span><a href="https://charlietrenorden.com/">Other projects</a></span>
+  <span><a class="back" href="https://charlietrenorden.com/">Other projects <span class="arw">&#8594;</span></a></span>
 </footer>
 
 </div>
 <script id="data" type="application/json">%%DATA%%</script>
 <script>
-"use strict";
-const D = JSON.parse(document.getElementById("data").textContent);
-const NS = "http://www.w3.org/2000/svg";
-const el = (n, a = {}) => {
-  const e = document.createElementNS(NS, n);
-  for (const k in a) e.setAttribute(k, a[k]);
-  return e;
-};
-const txt = (s, a) => { const t = el("text", a); t.textContent = s; return t; };
-const clear = n => { while (n.firstChild) n.removeChild(n.firstChild); };
-const band = y => y < 1500 ? 0 : y < 1700 ? 1 : y < 1800 ? 2 : y < 1900 ? 3 : 4;
-const cLab = c => c < 0 ? Math.abs(c) + " BC" : (c === 0 ? "0-99" : c + "s");
-const fmt = n => n.toLocaleString("en-AU");
-
-/* ------------------------------------------------------------------ tabs */
-const tabs = [["t-curve", "v-curve"], ["t-scatter", "v-scatter"], ["t-ridge", "v-ridge"]];
-tabs.forEach(([t, v]) => {
-  document.getElementById(t).addEventListener("click", () => {
-    tabs.forEach(([t2, v2]) => {
-      const on = t2 === t;
-      document.getElementById(t2).setAttribute("aria-selected", on ? "true" : "false");
-      document.getElementById(v2).classList.toggle("on", on);
-    });
-    draw();
-  });
-});
-
-/* ---------------------------------------------------- median-by-century chart */
-function median(svg, st) {
-  clear(svg);
-  const W = 960, H = 340, L = 62, R = 24, T = 26, B = 62;
-  const cs = st.centuries;
-  const top = Math.max.apply(null, cs.map(c => c.med)) * 1.15;
-  const x = i => L + (cs.length < 2 ? 0 : i / (cs.length - 1)) * (W - L - R);
-  const y = v => H - B - v / top * (H - T - B);
-
-  const step = top > 4000 ? 2000 : top > 1500 ? 500 : 200;
-  for (let g = 0; g <= top; g += step) {
-    svg.appendChild(el("line", {class: "g", x1: L, y1: y(g), x2: W - R, y2: y(g)}));
-    svg.appendChild(txt(fmt(g), {class: "ax", x: L - 8, y: y(g) + 4,
-      "text-anchor": "end"}));
-  }
-  let d = "";
-  cs.forEach((c, i) => { d += (i ? " L" : "M") + x(i).toFixed(1) + "," + y(c.med).toFixed(1); });
-  svg.appendChild(el("path", {class: "med", d: d}));
-  cs.forEach((c, i) => {
-    svg.appendChild(el("circle", {class: "medpt", cx: x(i).toFixed(1),
-      cy: y(c.med).toFixed(1), r: 3.4, fill: "var(--c" + band(c.c) + ")"}));
-    if (i % Math.ceil(cs.length / 9) === 0 || i === cs.length - 1) {
-      const g = el("g", {transform: "rotate(-42 " + x(i).toFixed(1) + " " + (H - B + 16) + ")"});
-      g.appendChild(txt(cLab(c.c), {class: "ax", x: x(i).toFixed(1), y: H - B + 16,
-        "text-anchor": "end"}));
-      svg.appendChild(g);
-    }
-    const tt = el("title");
-    tt.textContent = cLab(c.c) + ": median " + fmt(c.med) + " downloads, " + fmt(c.n) + " works";
-    const hit = el("circle", {cx: x(i).toFixed(1), cy: y(c.med).toFixed(1), r: 11,
-      fill: "transparent"});
-    hit.appendChild(tt);
-    svg.appendChild(hit);
-  });
-  svg.appendChild(el("line", {class: "g", x1: L, y1: H - B, x2: W - R, y2: H - B}));
-  svg.appendChild(txt("MEDIAN DOWNLOADS PER SURVIVING WORK, BY CENTURY",
-    {class: "axl", x: L, y: T - 10}));
-  svg.appendChild(txt("older", {class: "axl", x: L, y: H - 8}));
-  svg.appendChild(txt("newer", {class: "axl", x: W - R, y: H - 8, "text-anchor": "end"}));
-}
-
-/* ------------------------------------------------------------------ scatter */
-function scatter(svg, floor) {
-  clear(svg);
-  const W = 960, H = 470, L = 58, R = 122, T = 26, B = 52;
-  const x0 = Math.log10(5), x1 = Math.log10(3200);
-  const y0 = Math.log10(60), y1 = Math.log10(200000);
-  const px = v => L + (v - x0) / (x1 - x0) * (W - L - R);
-  const py = v => H - B - (v - y0) / (y1 - y0) * (H - T - B);
-
-  [10, 100, 1000].forEach(dec => [1, 2, 5].forEach(m => {
-    const v = Math.log10(dec * m);
-    if (v < x0 || v > x1) return;
-    svg.appendChild(el("line", {class: "g", x1: px(v), y1: T, x2: px(v), y2: H - B}));
-    svg.appendChild(txt(fmt(dec * m), {class: "ax", x: px(v), y: H - B + 18,
-      "text-anchor": "middle"}));
-  }));
-  [100, 1000, 10000, 100000].forEach(v => {
-    svg.appendChild(el("line", {class: "g", x1: L, y1: py(Math.log10(v)), x2: W - R,
-      y2: py(Math.log10(v))}));
-    svg.appendChild(txt(v >= 1000 ? (v / 1000) + "k" : v, {class: "ax", x: L - 7,
-      y: py(Math.log10(v)) + 4, "text-anchor": "end"}));
-  });
-
-  let shown = 0;
-  D.scatter.points.forEach(p => {
-    const lx = Math.log10(p.a), ly = Math.log10(p.d);
-    if (lx < x0 || lx > x1 || ly < y0 || ly > y1) return;
-    const on = p.d >= floor;
-    if (on) shown++;
-    svg.appendChild(el("circle", {class: "pt sp" + (on ? "" : " lo"),
-      cx: px(lx).toFixed(1), cy: py(ly).toFixed(1), r: on ? 2.3 : 1.4,
-      opacity: on ? .5 : .16}));
-  });
-  D.callouts.slice(0, 9).forEach(c => {
-    const lx = Math.log10(c.a), ly = Math.log10(c.d);
-    if (lx < x0 || lx > x1 || ly < y0 || ly > y1) return;
-    svg.appendChild(el("circle", {class: "hi", cx: px(lx).toFixed(1),
-      cy: py(ly).toFixed(1), r: 4}));
-    svg.appendChild(txt(c.n, {class: "lbl", x: (px(lx) + 7).toFixed(1),
-      y: (py(ly) + 3.5).toFixed(1)}));
-  });
-  svg.appendChild(txt("AGE IN YEARS", {class: "axl", x: L, y: H - 6}));
-  svg.appendChild(txt("DOWNLOADS PER MONTH", {class: "axl", x: L, y: T - 8}));
-  document.getElementById("scatnote").textContent =
-    "Every " + D.scatter.meta.stride + "th work by catalogue number - " +
-    fmt(D.scatter.meta.kept) + " of " + fmt(D.scatter.meta.of) +
-    ", sampled on one uniform stride so the density you see is the real density. " +
-    fmt(shown) + " sit above the current threshold. Named works are drawn on top.";
-}
-
-/* ---------------------------------------------------------------- ridgeline */
-function ridge(svg, st) {
-  clear(svg);
-  const W = 960, H = 560, L = 104, R = 26, T = 44, B = 48;
-  const rows = st.ridge.rows.slice().reverse();       // oldest at the bottom
-  if (!rows.length) return;
-  const stepY = (H - T - B) / Math.max(1, rows.length - 1);
-  const lo = st.ridge.lo, hi = st.ridge.hi;
-  const px = v => L + (v - lo) / (hi - lo) * (W - L - R);
-
-  [100, 1000, 10000, 100000].forEach(v => {
-    const lx = Math.log10(v);
-    if (lx < lo || lx > hi) return;
-    svg.appendChild(el("line", {class: "g", x1: px(lx), y1: T - 12, x2: px(lx), y2: H - B + 6}));
-    svg.appendChild(txt(v >= 1000 ? (v / 1000) + "k" : v, {class: "ax", x: px(lx),
-      y: H - B + 22, "text-anchor": "middle"}));
-  });
-  rows.forEach((r, i) => {
-    const base = T + i * stepY, amp = stepY * 1.35;
-    let d = "M" + L + "," + base.toFixed(1);
-    r.h.forEach((v, j) => {
-      d += " L" + (L + j / (r.h.length - 1) * (W - L - R)).toFixed(1) +
-           "," + (base - v * amp).toFixed(1);
-    });
-    d += " L" + (W - R) + "," + base.toFixed(1) + " Z";
-    const p = el("path", {class: "rg", d: d,
-      stroke: "var(--c" + band(r.c) + ")", fill: "var(--c" + band(r.c) + ")"});
-    const tt = el("title");
-    tt.textContent = cLab(r.c) + ": " + fmt(r.n) + " works, median " + fmt(r.med);
-    p.appendChild(tt);
-    svg.appendChild(p);
-    svg.appendChild(txt(cLab(r.c), {class: "cl", x: L - 12, y: (base - 2).toFixed(1),
-      "text-anchor": "end"}));
-    svg.appendChild(txt("n=" + fmt(r.n), {class: "nn", x: L - 12,
-      y: (base + 11).toFixed(1), "text-anchor": "end"}));
-  });
-  svg.appendChild(txt("DOWNLOADS PER MONTH, LOG SCALE - OLDEST AT THE BOTTOM",
-    {class: "axl", x: L, y: T - 24}));
-}
-
-/* -------------------------------------------------------------------- state */
-const slider = document.getElementById("floor");
-function state() { return D.states[Math.min(slider.value, D.states.length - 1)]; }
-
-function draw() {
-  const st = state();
-  median(document.getElementById("medchart"), st);
-  scatter(document.getElementById("scatter"), st.floor);
-  ridge(document.getElementById("ridge"), st);
-}
-
-function readout() {
-  const st = state();
-  const r = st.rho;
-  const box = document.getElementById("rho");
-  box.textContent = (r >= 0 ? "+" : "−") + Math.abs(r).toFixed(3);
-  box.className = "rho " + (Math.abs(r) < 0.03 ? "nil" : r > 0 ? "pos" : "neg");
-  document.getElementById("verdict").textContent =
-    Math.abs(r) < 0.03 ? "no relationship at all"
-      : r > 0 ? "older works read slightly more"
-      : "older works read slightly less";
-  document.getElementById("flab").textContent = st.floor === 0
-    ? "Counting every work in the corpus"
-    : "Ignoring works read fewer than " + fmt(st.floor) + " times a month";
-  document.getElementById("nread").textContent =
-    fmt(st.n) + " works · median " + fmt(st.med) + " a month";
-}
-
-const ticks = document.getElementById("ticks");
-[D.states[0], D.states[Math.floor(D.states.length / 2)], D.states[D.states.length - 1]]
-  .forEach(s => {
-    const b = document.createElement("span");
-    b.textContent = fmt(s.floor);
-    ticks.appendChild(b);
-  });
-
-slider.max = String(D.states.length - 1);
-slider.addEventListener("input", () => { readout(); draw(); });
-readout();
-draw();
+%%SCRIPT%%
 </script>
 </body>
 </html>

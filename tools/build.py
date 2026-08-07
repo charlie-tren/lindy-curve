@@ -66,7 +66,7 @@ def hero_svg(callouts, w=960, h=340):
 
     tx = L + 0.56 * (w - L - R)
     o.append(f'<text class="note" x="{tx:.0f}" y="{f2y(0.56) - 58:.1f}">'
-             'where the great ideas are meant to live</text>')
+             'where great ideas live</text>')
     o.append(f'<line class="lead" x1="{tx + 34:.0f}" y1="{f2y(0.56) - 52:.1f}" '
              f'x2="{tx + 58:.0f}" y2="{f2y(0.56) - 14:.1f}"/>')
     o.append(f'<line class="g" x1="{L}" y1="{h - B}" x2="{w - R}" y2="{h - B}"/>')
@@ -122,7 +122,9 @@ def main():
         "ENSHARE": f"{f['en_share']:.0f}",
         "GENERATED": date.today().strftime("%d/%m/%Y"),
     }
+    js = (ROOT / "tools" / "page.js").read_text(encoding="utf-8")
     out = tpl.replace("%%HERO%%", hero_svg(derived["callouts"]))
+    out = out.replace("%%SCRIPT%%", js)
     for k, v in subs.items():
         out = out.replace(f"%%{k}%%", v)
 

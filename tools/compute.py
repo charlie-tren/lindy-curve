@@ -92,8 +92,8 @@ def century_stats(rows, min_n=5):
         if len(v) < min_n:
             continue
         out.append({"c": k, "n": len(v), "med": round(statistics.median(v)),
-                    "p75": v[int(len(v) * .75)], "p90": v[int(len(v) * .90)],
-                    "max": v[-1]})
+                    "p25": v[int(len(v) * .25)], "p75": v[int(len(v) * .75)],
+                    "p90": v[int(len(v) * .90)], "max": v[-1]})
     return out
 
 
@@ -120,7 +120,7 @@ def ridge(rows, bins=26, lo=2.3, hi=5.3, min_n=12):
     return {"lo": lo, "hi": hi, "bins": bins, "rows": out}
 
 
-def scatter(rows, cap=6000):
+def scatter(rows, cap=4600):
     """Decimated for the browser on ONE uniform stride, deterministically.
 
     The first version kept every work above 1,500 downloads and only every 94th below
@@ -136,9 +136,31 @@ def scatter(rows, cap=6000):
     ordered = sorted(rows, key=lambda r: r["id"])
     stride = max(1, len(ordered) // cap)
     keep = ordered[::stride]
-    return ([{"a": r["a"], "d": r["d"]} for r in keep],
+    return ([{"a": r["a"], "d": r["d"], "t": r["t"][:52],
+              "au": r["au"].split(",")[0][:26]} for r in keep],
             {"kept": len(keep), "of": len(rows), "stride": stride,
              "uniform": True})
+
+
+def shelf(rows, slots=64):
+    """One bar per equal step of log age: the most-read work in that step.
+
+    This is the chart Charlie picked the design from - height is readership, position is
+    age, so it reads as a shelf. A skyline of the best-known work per slot rather than a
+    mean, because a mean over 67k works is flat everywhere and says nothing.
+    """
+    ages = [math.log10(r["a"]) for r in rows]
+    lo, hi = min(ages), max(ages)
+    best = {}
+    for r, a in zip(rows, ages):
+        k = min(slots - 1, int((a - lo) / (hi - lo) * slots))
+        if r["d"] > best.get(k, {"d": -1})["d"]:
+            best[k] = r
+    return {"lo": lo, "hi": hi, "slots": slots,
+            "bars": [{"k": k, "d": best[k]["d"], "y": best[k]["y"],
+                      "t": best[k]["t"][:52],
+                      "au": best[k]["au"].split(",")[0][:26]}
+                     for k in sorted(best)]}
 
 
 def callouts(rows):
@@ -169,7 +191,7 @@ def main():
             "rho": round(spearman([r["a"] for r in sub], [r["d"] for r in sub]), 4),
             "med": round(statistics.median([r["d"] for r in sub])),
             "centuries": century_stats(sub),
-            "ridge": ridge(sub),
+            "shelf": shelf(sub),
         })
 
     pts, meta = scatter(rows)
