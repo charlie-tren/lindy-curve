@@ -35,6 +35,9 @@ jobs:
       - name: Build
         run: python tools/build.py
 
+      - name: Render the share card
+        run: python tools/og.py
+
       # The suite is the gate, not a formality: it has caught an inverted axis and a
       # chart with the oldest work missing. A failing run must not publish.
       - name: Test
