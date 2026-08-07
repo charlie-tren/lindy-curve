@@ -40,10 +40,14 @@ function tipper(tipId, svg) {
     reset: function () { hits = []; },
     add: function (x, y, head, sub) { hits.push({x: x, y: y, head: head, sub: sub}); },
     hide: function () { tip.classList.remove("on"); },
-    track: function (u, W, H, radius) {
+    /* xonly snaps to the nearest column regardless of vertical position, which is how
+       a line or bar chart should behave - requiring a hit on the 3px marker itself made
+       the tooltips feel broken. The scatter stays 2D, where y carries meaning. */
+    track: function (u, W, H, radius, xonly) {
       let best = null, bd = radius * radius;
       for (const h of hits) {
-        const q = (h.x - u.x) * (h.x - u.x) + (h.y - u.y) * (h.y - u.y);
+        const q = xonly ? (h.x - u.x) * (h.x - u.x)
+          : (h.x - u.x) * (h.x - u.x) + (h.y - u.y) * (h.y - u.y);
         if (q < bd) { bd = q; best = h; }
       }
       if (!best) { tip.classList.remove("on"); return; }
@@ -103,7 +107,7 @@ function shelf(st) {
       y: (H - B - h).toFixed(1), width: (bw * 0.7).toFixed(1),
       height: Math.max(1, h).toFixed(1), fill: "var(--c" + band(b.y) + ")",
       "data-year": b.y}));
-    tipShelf.add(x + bw / 2, H - B - h / 2, t[0],
+    tipShelf.add(x + bw / 2, H - B - h, t[0],
       (t[1] ? t[1] + DOT : "") + yrLab(b.y) + DOT + fmt(b.d) + " readers a month");
   });
   svgShelf.appendChild(el("line", {class: "g", x1: L, y1: H - B + 4, x2: W - R,
@@ -115,7 +119,7 @@ function shelf(st) {
     "text-anchor": "end"}));
 }
 svgShelf.addEventListener("pointermove", function (ev) {
-  tipShelf.track(userPos(svgShelf, ev, SH.W, SH.H), SH.W, SH.H, 22);
+  tipShelf.track(userPos(svgShelf, ev, SH.W, SH.H), SH.W, SH.H, 12, true);
 });
 svgShelf.addEventListener("pointerleave", function () { tipShelf.hide(); });
 
@@ -166,7 +170,7 @@ function median(st) {
     "text-anchor": "end"}));
 }
 svgMed.addEventListener("pointermove", function (ev) {
-  tipMed.track(userPos(svgMed, ev, MD.W, MD.H), MD.W, MD.H, 26);
+  tipMed.track(userPos(svgMed, ev, MD.W, MD.H), MD.W, MD.H, 22, true);
 });
 svgMed.addEventListener("pointerleave", function () { tipMed.hide(); });
 
@@ -280,7 +284,7 @@ svgSpread.addEventListener("pointermove", function (ev) {
     spread(state());
     return;
   }
-  tipSpread.track(u, SP.W, SP.H, 30);
+  tipSpread.track(u, SP.W, SP.H, 22, true);
 });
 svgSpread.addEventListener("pointerleave", function () { tipSpread.hide(); });
 svgSpread.addEventListener("dblclick", function () { win = null; spread(state()); });

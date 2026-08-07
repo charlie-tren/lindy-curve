@@ -194,12 +194,32 @@ def main():
                       f"{tag}: scatter uses {len(radii)} dot radii {radii}, expected 1")
 
                 # hovering a chart must actually produce a tooltip with a work in it
-                sb = pg.locator("#shelf rect").nth(8).bounding_box()
-                pg.mouse.move(sb["x"] + sb["width"] / 2, sb["y"] + sb["height"] / 2)
+                # every chart with a tooltip must fire it from ANYWHERE in its column,
+                # not only from a direct hit on a 3px marker
+                for sel, tid, name in [("#shelf rect", "tip3", "shelf"),
+                                       ("#medchart circle.medpt", "tip4", "century line")]:
+                    # scroll it under the viewport first - mouse.move takes viewport
+                    # coordinates, so an element 1,500px down is unreachable and the
+                    # tooltip looks broken when it is not
+                    pg.locator(sel).nth(12).scroll_into_view_if_needed()
+                    pg.wait_for_timeout(150)
+                    bb = pg.locator(sel).nth(12).bounding_box()
+                    pg.mouse.move(bb["x"] + bb["width"] / 2, bb["y"] - 40)
+                    pg.wait_for_timeout(180)
+                    got = pg.evaluate(
+                        f"document.getElementById('{tid}').classList.contains('on')")
+                    check(got, f"{tag}: hovering the {name} column produced no tooltip")
+                pg.click("#t-ridge")
                 pg.wait_for_timeout(200)
-                shown = pg.evaluate(
-                    "document.getElementById('tip3').classList.contains('on')")
-                check(shown, f"{tag}: hovering the shelf produced no tooltip")
+                pg.locator("#spread").scroll_into_view_if_needed()
+                pg.wait_for_timeout(150)
+                sp = pg.locator("#spread").bounding_box()
+                pg.mouse.move(sp["x"] + sp["width"] * 0.5, sp["y"] + sp["height"] * 0.25)
+                pg.wait_for_timeout(200)
+                check(pg.evaluate("document.getElementById('tip2').classList.contains('on')"),
+                      f"{tag}: hovering the spread chart produced no tooltip")
+                pg.click("#t-curve")
+                pg.wait_for_timeout(150)
 
                 # the page must be legible in this theme, not just present
                 col = pg.evaluate("""() => {
