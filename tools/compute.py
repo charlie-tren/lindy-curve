@@ -38,7 +38,8 @@ ROOT = Path(__file__).resolve().parent.parent
 NOW = 2026
 
 # The floors the slider steps through. Dense where the signal changes fastest.
-FLOORS = [0, 300, 450, 600, 800, 1000, 1500, 2000, 3000, 5000, 8000, 15000]
+FLOORS = [0, 150, 250, 300, 350, 400, 450, 500, 550, 600, 700, 800, 900, 1000,
+          1200, 1500, 2000, 2500, 3000, 4000, 5000, 7000, 10000, 15000, 25000]
 
 # Works worth naming on the charts: recognisable, and spread across the age axis.
 CALLOUTS = ["Moby Dick", "Pride and Prejudice", "Romeo and Juliet", "The Odyssey",
@@ -92,8 +93,7 @@ def century_stats(rows, min_n=5):
         if len(v) < min_n:
             continue
         out.append({"c": k, "n": len(v), "med": round(statistics.median(v)),
-                    "p25": v[int(len(v) * .25)], "p75": v[int(len(v) * .75)],
-                    "p90": v[int(len(v) * .90)], "max": v[-1]})
+                    "p25": v[int(len(v) * .25)], "p75": v[int(len(v) * .75)]})
     return out
 
 
@@ -142,6 +142,19 @@ def scatter(rows, cap=4600):
              "uniform": True})
 
 
+TITLES = []
+_TIDX = {}
+
+
+def intern_title(t, au):
+    """25 threshold states repeat the same shelf titles, which doubled the payload."""
+    key = (t, au)
+    if key not in _TIDX:
+        _TIDX[key] = len(TITLES)
+        TITLES.append([t, au])
+    return _TIDX[key]
+
+
 def shelf(rows, slots=64):
     """One bar per equal step of log age: the most-read work in that step.
 
@@ -158,8 +171,8 @@ def shelf(rows, slots=64):
             best[k] = r
     return {"lo": lo, "hi": hi, "slots": slots,
             "bars": [{"k": k, "d": best[k]["d"], "y": best[k]["y"],
-                      "t": best[k]["t"][:52],
-                      "au": best[k]["au"].split(",")[0][:26]}
+                      "i": intern_title(best[k]["t"][:46],
+                                        best[k]["au"].split(",")[0][:24])}
                      for k in sorted(best)]}
 
 
@@ -216,6 +229,7 @@ def main():
         },
         "states": states,
         "scatter": {"points": pts, "meta": meta},
+        "titles": TITLES,
         "callouts": callouts(rows),
         "oldest": [{"t": r["t"][:70], "au": r["au"].split(",")[0], "y": r["y"],
                     "d": r["d"]} for r in oldest],

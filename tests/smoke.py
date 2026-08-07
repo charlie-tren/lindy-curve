@@ -95,32 +95,23 @@ def main():
                 check(pg.locator("#v-curve text", has_text="STILL READ").count() > 0,
                       f"{tag}: hero has no y-axis label")
 
-                # SAME GUARD ON THE SHELF. The hero-only version missed this exact
-                # inversion when the shelf was added: age rises to the right there too.
-                # Reads the DATE out of each tooltip rather than guessing at titles - the
-                # corpus's oldest work is a Chinese text from 1105 BC, not Homer.
-                shelf = pg.evaluate(r"""() => {
-                    const rs = [...document.querySelectorAll('#shelf rect')];
-                    const out = [];
-                    for (const r of rs) {
-                        const t = r.querySelector('title');
-                        if (!t) continue;
-                        const m = / (\d+) BC | (\d{3,4}) /.exec(t.textContent);
-                        if (!m) continue;
-                        const yr = m[1] ? -(+m[1]) : +m[2];
-                        out.push({x: +r.getAttribute('x'), yr: yr,
-                                  txt: t.textContent.slice(0, 46)});
-                    }
-                    out.sort((a, b) => a.x - b.x);
-                    return out.length > 3
-                      ? {left: out[0], right: out[out.length - 1], n: out.length}
-                      : null;
+                # SAME GUARD ON THE SHELF. Age rises to the right there too, and the
+                # hero-only version of this check missed the inversion when the shelf was
+                # added. Reads data-year off the bars - the corpus's oldest work is a
+                # Chinese text from 1105 BC, so a title-based assertion was wrong too.
+                shelf = pg.evaluate("""() => {
+                    const rs = [...document.querySelectorAll('#shelf rect[data-year]')];
+                    if (rs.length < 4) return null;
+                    const o = rs.map(r => ({x: +r.getAttribute('x'),
+                                            yr: +r.getAttribute('data-year')}))
+                                .sort((a, b) => a.x - b.x);
+                    return {left: o[0].yr, right: o[o.length - 1].yr, n: o.length};
                 }""")
-                if check(shelf is not None, f"{tag}: shelf tooltips carry no dates"):
-                    check(shelf["right"]["yr"] < shelf["left"]["yr"],
-                          f"{tag}: SHELF AXIS INVERTED - leftmost bar is "
-                          f"{shelf['left']['yr']}, rightmost is {shelf['right']['yr']}; "
-                          "age must rise to the right, matching the curve above it")
+                if check(shelf is not None, f"{tag}: shelf bars carry no year data"):
+                    check(shelf["right"] < shelf["left"],
+                          f"{tag}: SHELF AXIS INVERTED - leftmost bar is {shelf['left']}, "
+                          f"rightmost is {shelf['right']}; age must rise to the right, "
+                          "matching the curve above it")
 
                 # every view draws something
                 counts = pg.evaluate("""() => ({
@@ -180,6 +171,35 @@ def main():
 
                 check(pg.locator("footer a.back .arw").count() == 1,
                       f"{tag}: the Other projects link has no arrow")
+
+                # THE REGRESSION THAT MATTERS: Charlie chose the cream design, and an OS
+                # set to dark meant he never saw it. Cream must be the default in BOTH
+                # browser preferences; dark is opt-in via the toggle only.
+                theme = pg.evaluate("document.documentElement.getAttribute('data-theme')")
+                check(theme == "light",
+                      f"{tag}: default theme is '{theme}', must be light (cream) "
+                      "regardless of the browser preference")
+                check(pg.locator("#tog").count() == 1, f"{tag}: no theme toggle")
+                pg.click("#tog")
+                pg.wait_for_timeout(150)
+                check(pg.evaluate("document.documentElement.getAttribute('data-theme')")
+                      == "dark", f"{tag}: the toggle did not switch to dark")
+                pg.click("#tog")
+                pg.wait_for_timeout(150)
+
+                # one dot size only - two radii read as a distinction in the data
+                radii = pg.evaluate("""() => [...new Set([...document.querySelectorAll(
+                    '#scatter circle.pt')].map(c => c.getAttribute('r')))]""")
+                check(len(radii) == 1,
+                      f"{tag}: scatter uses {len(radii)} dot radii {radii}, expected 1")
+
+                # hovering a chart must actually produce a tooltip with a work in it
+                sb = pg.locator("#shelf rect").nth(8).bounding_box()
+                pg.mouse.move(sb["x"] + sb["width"] / 2, sb["y"] + sb["height"] / 2)
+                pg.wait_for_timeout(200)
+                shown = pg.evaluate(
+                    "document.getElementById('tip3').classList.contains('on')")
+                check(shown, f"{tag}: hovering the shelf produced no tooltip")
 
                 # the page must be legible in this theme, not just present
                 col = pg.evaluate("""() => {

@@ -22,12 +22,6 @@
   --disp:"Arial Narrow","Helvetica Neue",Helvetica,sans-serif;
   --mono:"Courier New",Courier,monospace;
 }
-/* The dark counterpart: After Hours, designed rather than inverted. */
-@media (prefers-color-scheme:dark){:root{
-  --ground:#1B1611; --panel:#221C15; --ink:#EDE3CE; --dim:#A08F72; --faint:#6E6049;
-  --rule:#3B3125; --gilt:#C9A961; --ox:#B4453A;
-  --c0:#6E9A93; --c1:#7FA88F; --c2:#C0A067; --c3:#C2764C; --c4:#98A099;
-}}
 :root[data-theme="dark"]{
   --ground:#1B1611; --panel:#221C15; --ink:#EDE3CE; --dim:#A08F72; --faint:#6E6049;
   --rule:#3B3125; --gilt:#C9A961; --ox:#B4453A;
@@ -45,6 +39,12 @@ body{margin:0;background:var(--ground);color:var(--ink);
 a{color:var(--gilt);text-underline-offset:3px}
 :focus-visible{outline:2px solid var(--gilt);outline-offset:3px}
 
+.tog{appearance:none;cursor:pointer;background:transparent;color:var(--dim);
+  border:1px solid var(--rule);border-radius:999px;padding:.36rem .7rem;
+  font:400 11px/1 var(--disp);letter-spacing:.1em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:.45rem;transition:color .2s,border-color .2s}
+.tog:hover{color:var(--ink);border-color:var(--gilt)}
+.tog .dot{width:7px;height:7px;border-radius:50%;background:var(--gilt)}
 .mast{display:flex;align-items:baseline;justify-content:space-between;gap:1.15rem;
       flex-wrap:wrap;border-bottom:1px solid var(--rule);padding-bottom:.8rem}
 .wm{font:400 clamp(26px,5vw,36px)/1 var(--body);font-variant:small-caps;
@@ -118,9 +118,9 @@ details p b{color:var(--ink)}
 .method{margin-top:3rem;display:flex;flex-direction:column;gap:.8rem}
 a.back{text-decoration:none;display:inline-flex;align-items:center;gap:.4rem}
 a.back .arw{display:inline-block;transition:transform .25s}
-a.back:hover .arw{transform:translateX(4px)}
+a.back:hover .arw{transform:translateX(-4px)}
 .shelfwrap{position:relative}
-#scatwrap{position:relative}
+#scatwrap,#spreadwrap,#medwrap,.shelfwrap{position:relative}
 .tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
   background:var(--ground);border:1px solid var(--rule);padding:6px 9px;
   font:400 12px/1.4 var(--body);color:var(--ink);max-width:250px;z-index:5;
@@ -129,10 +129,12 @@ a.back:hover .arw{transform:translateX(4px)}
 .tip b{display:block;font-weight:400;color:var(--gilt)}
 .tip span{font:400 10.5px/1.5 var(--mono);color:var(--dim)}
 .zoomhint{font:400 .78rem/1.5 var(--mono);color:var(--faint)}
-#scatter{cursor:crosshair;touch-action:none}
-#scatter.drag{cursor:grabbing}
+#scatter,#spread{cursor:crosshair;touch-action:none;user-select:none;
+  -webkit-user-select:none}
+#spread{cursor:crosshair}
+#scatter.drag,#spread.drag{cursor:grabbing}
 footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
-       display:flex;justify-content:space-between;gap:1.15rem;flex-wrap:wrap;
+       display:flex;flex-direction:column;align-items:flex-start;gap:.5rem;
        font-size:.88rem;color:var(--dim)}
 
 .g{stroke:var(--rule);stroke-width:1}
@@ -169,6 +171,8 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
 
 <header class="mast">
   <span class="wm">The Lindy Curve</span>
+  <button class="tog" id="tog" type="button" aria-label="Switch to the dark theme">
+    <span class="dot"></span><span id="togl">Dark</span></button>
   <nav role="tablist" aria-label="Views">
     <button role="tab" id="t-curve" aria-selected="true" aria-controls="v-curve">The curve</button>
     <button role="tab" id="t-scatter" aria-selected="false" aria-controls="v-scatter">Scatter</button>
@@ -185,15 +189,9 @@ often each of its texts was read this month.</b> Here are %%WORKS%% of them, by 
 
   <figure>%%HERO%%</figure>
 
-  <div class="card">
-    <span class="stamp">Illustration, not a fit</span>
-    <p class="sub">That is the shape the idea predicts, with real works placed along it by
-    age. The curve itself is drawn rather than measured - which matters, because when you
-    measure it, this is not what comes out.</p>
-  </div>
-
   <figure class="shelfwrap"><svg id="shelf" viewBox="0 0 960 260" role="img"
-    aria-label="One bar per age step, height is readership"></svg></figure>
+    aria-label="One bar per age step, height is readership"></svg>
+    <div class="tip" id="tip3"></div></figure>
 
   <div class="card">
     <h3>The same works as a shelf</h3>
@@ -223,8 +221,9 @@ often each of its texts was read this month.</b> Here are %%WORKS%% of them, by 
     </div>
   </div>
 
-  <figure><svg id="medchart" viewBox="0 0 960 340" role="img"
-    aria-label="Median downloads per surviving work, by century"></svg></figure>
+  <figure id="medwrap"><svg id="medchart" viewBox="0 0 960 340" role="img"
+    aria-label="Median downloads per surviving work, by century"></svg>
+    <div class="tip" id="tip4"></div></figure>
 
   <div class="card">
     <h3>What the measurement actually says</h3>
@@ -249,102 +248,76 @@ often each of its texts was read this month.</b> Here are %%WORKS%% of them, by 
   double-click to reset.</p>
   <div class="card">
     <h3>One dot per work</h3>
-    <p class="sub">Both axes are logarithmic, because the most-read book is over four
-    hundred times the median. The dense band across the bottom is the baseline the slider
-    cuts through; the named works are the ones most people would recognise. What there
-    isn't, at any threshold, is a slope. The plot is a uniform sample rather than all
-    %%WORKS%% works, so the cloud's shape is honest even though the rarest points are
-    thinned.</p>
+    <p class="sub">Both axes are logarithmic. There is no slope at any threshold.</p>
     <p class="k" id="scatnote"></p>
   </div>
 </section>
 
 <!-- ========================================================== the ridgeline -->
 <section class="view" id="v-ridge" role="tabpanel" aria-labelledby="t-ridge">
-  <figure><svg id="spread" viewBox="0 0 960 420" role="img"
-    aria-label="Quartile range of downloads per century"></svg></figure>
+  <figure id="spreadwrap"><svg id="spread" viewBox="0 0 960 420" role="img"
+    aria-label="Quartile range of downloads per century"></svg>
+    <div class="tip" id="tip2"></div></figure>
   <div class="card">
     <h3>The middle half of each century</h3>
-    <p class="sub">The band is the middle 50% of works from that century - a quarter read
-    less, a quarter read more - and the line is the median. This replaced a ridgeline, which
-    stacked the same distributions on top of each other and made them almost impossible to
-    compare. Here the answer is legible in one look: <b>the bands sit at the same height
-    across two and a half thousand years.</b> Centuries with fewer than five works are left
-    out, and the counts are on the axis so you can see which are thin.</p>
+    <p class="sub">Shaded band: the middle 50% of works from that century. Line: the
+    median. <b>Both sit at the same height across 2,500 years.</b> The wobble on the left
+    is small samples, not volatility - hover any century for its count.</p>
   </div>
 </section>
 
 <!-- ========================================================== methodology -->
 <div class="method">
-  <h2>What this can and cannot show</h2>
-  <p class="sub">The honest limits, in rough order of how much they matter. Any one of
-  them is enough reason not to read a verdict on the Lindy effect off these charts.</p>
+  <h2>What this cannot show</h2>
 
   <details>
-    <summary>The books that died are not in the data</summary>
-    <p><b>This is the big one, and it cannot be fixed.</b> The Lindy claim is about
-    survival, but a catalogue of surviving texts contains no failures. Gutenberg holds
-    %%ANCIENT%% works older than five hundred years, and every one of them is there
-    because somebody thought it worth digitising. The tens of thousands of ancient works
-    that were lost, and the mass of forgotten recent ones that were not, are both absent -
-    in opposite directions. Plotting the survivors and calling the result a decay curve
-    would be measuring a selection decision, not the passage of time.</p>
+    <summary>The books that died are missing</summary>
+    <p>The Lindy claim is about survival, and a catalogue of survivors holds no failures.
+    All %%ANCIENT%% works older than five hundred years are here because someone chose to
+    digitise them. That is a selection decision, not the passage of time. <b>It is reason
+    enough on its own not to read a verdict off these charts.</b></p>
   </details>
 
   <details>
-    <summary>The dates are the author's, not the work's</summary>
-    <p>Gutenberg publishes no composition or first-publication date - its
-    <span class="k">issued</span> field is when the file went online. So every date here is
-    derived from the author's lifespan, capped at fifty years after birth. That is a proxy
-    and it is sometimes badly wrong: E. M. Forster wrote A Room with a View in 1908 and died
-    in 1970, so a naive death-date would call a 117-year-old book 56 years old. The cap
-    reduces that error without removing it. Ancient authors carry conventional dates -
-    Homer is filed at 700 BC, which is a scholarly convention rather than a fact.</p>
+    <summary>Dates are the author's, not the work's</summary>
+    <p>Gutenberg publishes no publication date, so dates come from the author's lifespan
+    capped at birth plus fifty. Forster wrote A Room with a View in 1908 and died in 1970;
+    the cap turns a 62-year error into 21. Homer sits at 700 BC by convention.</p>
   </details>
 
   <details>
-    <summary>The download figure is thirty days, and it has a floor</summary>
-    <p>Gutenberg documents the number as <b>"the approximate number of downloads in the
-    last 30 days (updated daily)"</b>. That is a genuine strength - it measures current
-    readership rather than accumulating since upload, so there is no advantage to having
-    been online longer. The weaknesses are that a thirty-day window is noisy and seasonal,
-    set texts spike in term time, and <b>%%BASELINE%%% of the corpus sits in a narrow band
-    between 300 and 600 downloads a month</b> which is too uniform to be readers. What
-    that baseline is, Gutenberg does not say. The slider exists because of it.</p>
+    <summary>The count is thirty days, with a floor</summary>
+    <p>Gutenberg's figure is "the approximate number of downloads in the last 30 days".
+    Current readership, which is the strength - but seasonal, and <b>%%BASELINE%%% of the
+    corpus sits between 300 and 600 a month</b>, too uniform to be readers. Cause
+    undocumented. Hence the slider.</p>
   </details>
 
   <details>
-    <summary>Nothing after 1929, and a thin middle</summary>
-    <p>Gutenberg is public domain, so the recent decades - where most forgetting actually
-    happens - are structurally missing. There is also a genuine hollow through the medieval
-    centuries: %%MEDIEVAL%% works between 500 and 1300 AD, against %%C19%% from the 1800s
-    alone. A gap in the chart there is the catalogue, not a rendering fault.</p>
+    <summary>Nothing after 1929, thin in the middle</summary>
+    <p>Public domain only, so the decades where most forgetting happens are absent. And
+    %%MEDIEVAL%% works span 500 to 1300 AD against %%C19%% from the 1800s alone - the gap
+    is the catalogue, not a bug.</p>
   </details>
 
   <details>
-    <summary>It is mostly English, and one work can appear many times</summary>
-    <p>%%ENSHARE%%% of the corpus is English, so this is really a claim about what English
-    readers still open. Gutenberg also holds multiple editions and translations of the same
-    text as separate records - four Homers appear in the oldest dozen - so a canonical work
-    can have its readership split across several entries, which pushes the famous ones
-    down rather than up.</p>
+    <summary>Mostly English, and editions repeat</summary>
+    <p>%%ENSHARE%%% English. Translations and editions are separate records, so a canonical
+    work's readers split across several entries - which pushes the famous ones down.</p>
   </details>
 
   <details>
     <summary>How it is built</summary>
-    <p>One request to Gutenberg's RDF feed gives the whole catalogue with download counts
-    and author dates; the gutendex API serves the same numbers but only 32 books per page,
-    which is 2,472 requests. Everything is computed once at build time into a JSON file and
-    the page is static. Correlations are Spearman with tie correction, which matters here
-    because the baseline band creates tens of thousands of ties. Rebuilt weekly, and each
-    run appends a snapshot so the seasonality becomes visible over time.</p>
+    <p>One request to Gutenberg's RDF feed for the whole catalogue; gutendex serves the same
+    numbers 32 at a time. Computed once at build time, static page, Spearman with tie
+    correction because the baseline creates tens of thousands of ties. Rebuilt weekly.</p>
   </details>
 </div>
 
 <footer>
-  <span>Data: Project Gutenberg RDF feed, %%WORKS%% works with a datable author.
-    Rebuilt %%GENERATED%%.</span>
-  <span><a class="back" href="https://charlietrenorden.com/">Other projects <span class="arw">&#8594;</span></a></span>
+  <a class="back" href="https://charlietrenorden.com/"><span class="arw">&#8592;</span>
+    Other projects</a>
+  <span>Project Gutenberg, %%WORKS%% works with a datable author. Rebuilt %%GENERATED%%.</span>
 </footer>
 
 </div>
