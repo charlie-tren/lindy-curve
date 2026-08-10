@@ -96,7 +96,7 @@ a.back{text-decoration:none;display:inline-flex;align-items:center;gap:.4rem}
 a.back .arw{display:inline-block;transition:transform .25s}
 a.back:hover .arw{transform:translateX(-4px)}
 .shelfwrap{position:relative}
-#scatwrap,#medwrap,#wikiwrap,.shelfwrap{position:relative}
+#scatwrap,#medwrap,#wikiwrap,#herowrap,.shelfwrap{position:relative}
 .tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
   background:var(--ground);border:1px solid var(--rule);padding:6px 9px;
   font:400 12px/1.42 var(--body);color:var(--ink);width:max-content;
@@ -105,6 +105,15 @@ a.back:hover .arw{transform:translateX(-4px)}
 .tip.on{opacity:1}
 .tip b{display:block;font-weight:400;color:var(--gilt)}
 .tip span{font:400 10.5px/1.5 var(--mono);color:var(--dim)}
+.filters{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+.flab{font:700 9.5px/1 var(--disp);letter-spacing:.15em;text-transform:uppercase;
+  color:var(--gilt);margin-right:.2rem}
+.chip{appearance:none;cursor:pointer;background:transparent;color:var(--dim);
+  border:1px solid var(--rule);border-radius:999px;padding:.3rem .66rem;
+  font:400 11.5px/1 var(--body);transition:color .15s,border-color .15s,background .15s}
+.chip:hover{color:var(--ink);border-color:var(--gilt)}
+.chip.on{background:var(--gilt);border-color:var(--gilt);color:var(--ground)}
+.fcount{font:400 .74rem/1 var(--mono);color:var(--faint);margin-left:auto}
 .zoomhint{font:400 .78rem/1.5 var(--mono);color:var(--faint)}
 #scatter,#wiki{cursor:crosshair;touch-action:none;user-select:none;
   -webkit-user-select:none}
@@ -151,14 +160,16 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
     <span class="dot"></span><span id="togl">Dark</span></button>
 </header>
 
-<p class="lede">Old things are supposed to endure: what has lasted a century is a fair
-bet to last another. Books make that testable, because Project Gutenberg publishes how
-often each of its texts was read this month. Here are 67,488 of them, by age.</p>
+<p class="lede">Homer has been read for two and a half thousand years. Most books are
+forgotten inside ten. The Lindy effect says that gap is the point: whatever has already
+lasted is the safest bet to last again. Project Gutenberg quietly publishes how many people
+opened each of its texts this month, which makes the claim testable - so here are
+67,488 books, oldest to newest, and how many people are reading them right now.</p>
 
 <!-- ============================================================ the curve -->
 <section class="view" id="v-curve">
 
-  <figure><svg viewBox="0 0 960 340" role="img" aria-label="The classic Lindy curve with real works placed on it by age">
+  <figure id="herowrap"><svg viewBox="0 0 960 340" role="img" aria-label="The classic Lindy curve with real works placed on it by age">
 <path class="cvf" d="M60,284 L60.0,46.0 L64.0,58.1 L67.9,69.0 L71.9,78.9 L75.8,87.9 L79.8,96.2 L83.7,103.8 L87.7,110.8 L91.6,117.3 L95.6,123.3 L99.5,128.9 L103.5,134.1 L107.5,139.0 L111.4,143.6 L115.4,147.9 L119.3,151.9 L123.3,155.7 L127.2,159.3 L131.2,162.7 L135.1,165.9 L139.1,169.0 L143.0,171.9 L147.0,174.6 L151.0,177.3 L154.9,179.8 L158.9,182.2 L162.8,184.4 L166.8,186.6 L170.7,188.7 L174.7,190.7 L178.6,192.6 L182.6,194.5 L186.5,196.2 L190.5,197.9 L194.5,199.5 L198.4,201.1 L202.4,202.6 L206.3,204.1 L210.3,205.5 L214.2,206.9 L218.2,208.2 L222.1,209.5 L226.1,210.7 L230.0,211.9 L234.0,213.0 L238.0,214.1 L241.9,215.2 L245.9,216.3 L249.8,217.3 L253.8,218.3 L257.7,219.2 L261.7,220.1 L265.6,221.0 L269.6,221.9 L273.5,222.8 L277.5,223.6 L281.5,224.4 L285.4,225.2 L289.4,226.0 L293.3,226.7 L297.3,227.4 L301.2,228.2 L305.2,228.9 L309.1,229.5 L313.1,230.2 L317.0,230.8 L321.0,231.5 L325.0,232.1 L328.9,232.7 L332.9,233.3 L336.8,233.8 L340.8,234.4 L344.7,234.9 L348.7,235.5 L352.6,236.0 L356.6,236.5 L360.5,237.0 L364.5,237.5 L368.5,238.0 L372.4,238.4 L376.4,238.9 L380.3,239.4 L384.3,239.8 L388.2,240.2 L392.2,240.7 L396.1,241.1 L400.1,241.5 L404.0,241.9 L408.0,242.3 L412.0,242.7 L415.9,243.1 L419.9,243.4 L423.8,243.8 L427.8,244.2 L431.7,244.5 L435.7,244.9 L439.6,245.2 L443.6,245.5 L447.5,245.9 L451.5,246.2 L455.5,246.5 L459.4,246.8 L463.4,247.1 L467.3,247.4 L471.3,247.7 L475.2,248.0 L479.2,248.3 L483.1,248.6 L487.1,248.9 L491.0,249.1 L495.0,249.4 L499.0,249.7 L502.9,249.9 L506.9,250.2 L510.8,250.5 L514.8,250.7 L518.7,251.0 L522.7,251.2 L526.6,251.4 L530.6,251.7 L534.5,251.9 L538.5,252.1 L542.5,252.4 L546.4,252.6 L550.4,252.8 L554.3,253.0 L558.3,253.2 L562.2,253.5 L566.2,253.7 L570.1,253.9 L574.1,254.1 L578.0,254.3 L582.0,254.5 L586.0,254.7 L589.9,254.9 L593.9,255.0 L597.8,255.2 L601.8,255.4 L605.7,255.6 L609.7,255.8 L613.6,256.0 L617.6,256.1 L621.5,256.3 L625.5,256.5 L629.5,256.6 L633.4,256.8 L637.4,257.0 L641.3,257.1 L645.3,257.3 L649.2,257.5 L653.2,257.6 L657.1,257.8 L661.1,257.9 L665.0,258.1 L669.0,258.2 L673.0,258.4 L676.9,258.5 L680.9,258.7 L684.8,258.8 L688.8,259.0 L692.7,259.1 L696.7,259.2 L700.6,259.4 L704.6,259.5 L708.5,259.6 L712.5,259.8 L716.5,259.9 L720.4,260.0 L724.4,260.2 L728.3,260.3 L732.3,260.4 L736.2,260.5 L740.2,260.7 L744.1,260.8 L748.1,260.9 L752.0,261.0 L756.0,261.1 L760.0,261.3 L763.9,261.4 L767.9,261.5 L771.8,261.6 L775.8,261.7 L779.7,261.8 L783.7,261.9 L787.6,262.0 L791.6,262.2 L795.5,262.3 L799.5,262.4 L803.5,262.5 L807.4,262.6 L811.4,262.7 L815.3,262.8 L819.3,262.9 L823.2,263.0 L827.2,263.1 L831.1,263.2 L835.1,263.3 L839.0,263.4 L843.0,263.5 L847.0,263.6 L850.9,263.6 L854.9,263.7 L858.8,263.8 L862.8,263.9 L866.7,264.0 L870.7,264.1 L874.6,264.2 L878.6,264.3 L882.5,264.4 L886.5,264.5 L890.5,264.5 L894.4,264.6 L898.4,264.7 L902.3,264.8 L906.3,264.9 L910.2,265.0 L914.2,265.0 L918.1,265.1 L922.1,265.2 L926.0,265.3 L930.0,265.4 L930,284 Z"/>
 <path class="cv" d="M60.0,46.0 L64.0,58.1 L67.9,69.0 L71.9,78.9 L75.8,87.9 L79.8,96.2 L83.7,103.8 L87.7,110.8 L91.6,117.3 L95.6,123.3 L99.5,128.9 L103.5,134.1 L107.5,139.0 L111.4,143.6 L115.4,147.9 L119.3,151.9 L123.3,155.7 L127.2,159.3 L131.2,162.7 L135.1,165.9 L139.1,169.0 L143.0,171.9 L147.0,174.6 L151.0,177.3 L154.9,179.8 L158.9,182.2 L162.8,184.4 L166.8,186.6 L170.7,188.7 L174.7,190.7 L178.6,192.6 L182.6,194.5 L186.5,196.2 L190.5,197.9 L194.5,199.5 L198.4,201.1 L202.4,202.6 L206.3,204.1 L210.3,205.5 L214.2,206.9 L218.2,208.2 L222.1,209.5 L226.1,210.7 L230.0,211.9 L234.0,213.0 L238.0,214.1 L241.9,215.2 L245.9,216.3 L249.8,217.3 L253.8,218.3 L257.7,219.2 L261.7,220.1 L265.6,221.0 L269.6,221.9 L273.5,222.8 L277.5,223.6 L281.5,224.4 L285.4,225.2 L289.4,226.0 L293.3,226.7 L297.3,227.4 L301.2,228.2 L305.2,228.9 L309.1,229.5 L313.1,230.2 L317.0,230.8 L321.0,231.5 L325.0,232.1 L328.9,232.7 L332.9,233.3 L336.8,233.8 L340.8,234.4 L344.7,234.9 L348.7,235.5 L352.6,236.0 L356.6,236.5 L360.5,237.0 L364.5,237.5 L368.5,238.0 L372.4,238.4 L376.4,238.9 L380.3,239.4 L384.3,239.8 L388.2,240.2 L392.2,240.7 L396.1,241.1 L400.1,241.5 L404.0,241.9 L408.0,242.3 L412.0,242.7 L415.9,243.1 L419.9,243.4 L423.8,243.8 L427.8,244.2 L431.7,244.5 L435.7,244.9 L439.6,245.2 L443.6,245.5 L447.5,245.9 L451.5,246.2 L455.5,246.5 L459.4,246.8 L463.4,247.1 L467.3,247.4 L471.3,247.7 L475.2,248.0 L479.2,248.3 L483.1,248.6 L487.1,248.9 L491.0,249.1 L495.0,249.4 L499.0,249.7 L502.9,249.9 L506.9,250.2 L510.8,250.5 L514.8,250.7 L518.7,251.0 L522.7,251.2 L526.6,251.4 L530.6,251.7 L534.5,251.9 L538.5,252.1 L542.5,252.4 L546.4,252.6 L550.4,252.8 L554.3,253.0 L558.3,253.2 L562.2,253.5 L566.2,253.7 L570.1,253.9 L574.1,254.1 L578.0,254.3 L582.0,254.5 L586.0,254.7 L589.9,254.9 L593.9,255.0 L597.8,255.2 L601.8,255.4 L605.7,255.6 L609.7,255.8 L613.6,256.0 L617.6,256.1 L621.5,256.3 L625.5,256.5 L629.5,256.6 L633.4,256.8 L637.4,257.0 L641.3,257.1 L645.3,257.3 L649.2,257.5 L653.2,257.6 L657.1,257.8 L661.1,257.9 L665.0,258.1 L669.0,258.2 L673.0,258.4 L676.9,258.5 L680.9,258.7 L684.8,258.8 L688.8,259.0 L692.7,259.1 L696.7,259.2 L700.6,259.4 L704.6,259.5 L708.5,259.6 L712.5,259.8 L716.5,259.9 L720.4,260.0 L724.4,260.2 L728.3,260.3 L732.3,260.4 L736.2,260.5 L740.2,260.7 L744.1,260.8 L748.1,260.9 L752.0,261.0 L756.0,261.1 L760.0,261.3 L763.9,261.4 L767.9,261.5 L771.8,261.6 L775.8,261.7 L779.7,261.8 L783.7,261.9 L787.6,262.0 L791.6,262.2 L795.5,262.3 L799.5,262.4 L803.5,262.5 L807.4,262.6 L811.4,262.7 L815.3,262.8 L819.3,262.9 L823.2,263.0 L827.2,263.1 L831.1,263.2 L835.1,263.3 L839.0,263.4 L843.0,263.5 L847.0,263.6 L850.9,263.6 L854.9,263.7 L858.8,263.8 L862.8,263.9 L866.7,264.0 L870.7,264.1 L874.6,264.2 L878.6,264.3 L882.5,264.4 L886.5,264.5 L890.5,264.5 L894.4,264.6 L898.4,264.7 L902.3,264.8 L906.3,264.9 L910.2,265.0 L914.2,265.0 L918.1,265.1 L922.1,265.2 L926.0,265.3 L930.0,265.4"/>
 <circle class="mk" cx="103.5" cy="134.1" r="4.5"><title>Ulysses &#183; 32,147 downloads a month</title></circle>
@@ -186,7 +197,7 @@ often each of its texts was read this month. Here are 67,488 of them, by age.</p
 <text class="axl" x="930" y="304" text-anchor="end">OLDER</text>
 <text class="axl" transform="rotate(-90 38 165)" x="38" y="165" text-anchor="middle">STILL READ</text>
 <text class="axl" x="60" y="32">THE SHAPE THE LINDY EFFECT PREDICTS</text>
-</svg></figure>
+</svg><div class="tip" id="tip6"></div></figure>
 
   <figure class="shelfwrap"><svg id="shelf" viewBox="0 0 960 260" role="img"
     aria-label="One bar per age step, height is readership"></svg>
@@ -217,27 +228,26 @@ often each of its texts was read this month. Here are 67,488 of them, by age.</p
 
 <!-- =========================================================== the scatter -->
 <section class="view" id="v-scatter">
+  <div class="filters" id="filters" role="group" aria-label="Filter by era">
+    <span class="flab">Show</span>
+    <button type="button" class="chip on" data-era="all">Everything</button>
+    <button type="button" class="chip" data-era="anc">Before 1500</button>
+    <button type="button" class="chip" data-era="ear">1500 to 1800</button>
+    <button type="button" class="chip" data-era="c19">1800s</button>
+    <button type="button" class="chip" data-era="mod">1900 on</button>
+    <span class="fcount" id="fcount"></span>
+  </div>
   <figure id="scatwrap"><svg id="scatter" viewBox="0 0 960 470" role="img"
     aria-label="Every work by age against downloads, log scales"></svg>
     <div class="tip" id="tip"></div></figure>
-  <p class="zoomhint">Scroll to zoom, drag to pan, hover a point for the title,
-  double-click to reset.</p>
-  <div class="card">
-    <h3>Every work, one dot</h3>
-    <p class="sub">Age across, readers up, both on log scales. Scroll to zoom, drag to
-    pan, hover for a title. The oldest works sit at the right of the cloud rather than
-    above or below it, which is the whole finding in one picture.</p>
-    <p class="k" id="scatnote"></p>
-  </div>
 </section>
 
 <section class="view" id="v-wiki">
-  <h2>A second opinion</h2>
+  <h2>Checked against a different measure</h2>
   <p class="sub">Gutenberg's count has a floor - 61.5% of the corpus sits between
   300 and 600 a month, too uniform to be readers - so the finding needs a measure that does
   not share the flaw. Wikipedia pageviews have no floor and run monthly back to 2016, which
   also gives the multi-year average Gutenberg cannot.</p>
-  <p class="zoomhint">Scroll to zoom, drag to pan, double-click to reset.</p>
   <figure id="wikiwrap"><svg id="wiki" viewBox="0 0 960 420" role="img"
     aria-label="Wikipedia pageviews a year against age, for well-known works"></svg>
     <div class="tip" id="tip5"></div></figure>
@@ -313,8 +323,12 @@ function tipper(tipId, svg) {
       tip.appendChild(b);
       tip.appendChild(sp);
       const r = svg.getBoundingClientRect();
-      tip.style.left = Math.min(Math.max(0, r.width - 268),
-                                best.x / W * r.width + 12) + "px";
+      // flip to the left of the point when it would otherwise run off the edge, which
+      // was cutting long book titles in half
+      const tw = tip.offsetWidth || 240;
+      let lx = best.x / W * r.width + 12;
+      if (lx + tw > r.width - 4) lx = Math.max(0, best.x / W * r.width - tw - 12);
+      tip.style.left = lx + "px";
       tip.style.top = Math.max(0, best.y / H * r.height - 48) + "px";
       tip.classList.add("on");
     }
@@ -325,6 +339,26 @@ function userPos(svg, ev, W, H) {
   return {x: (ev.clientX - r.left) / r.width * W, y: (ev.clientY - r.top) / r.height * H};
 }
 
+
+/* ------------------------------------------------- the hero curve gets hover too */
+const svgHero = document.querySelector("#v-curve figure svg");
+if (svgHero && document.getElementById("tip6")) {
+  const tipHero = tipper("tip6", svgHero);
+  const HW = svgHero.viewBox.baseVal.width, HH = svgHero.viewBox.baseVal.height;
+  const marks = svgHero.querySelectorAll("circle.mk");
+  const labels = svgHero.querySelectorAll("text.mkl");
+  for (let i = 0; i < marks.length; i++) {
+    const t = marks[i].querySelector("title");
+    tipHero.add(+marks[i].getAttribute("cx"), +marks[i].getAttribute("cy"),
+      labels[i] ? labels[i].textContent : "?",
+      t ? t.textContent.replace(/^[^·]*·\s*/, "") : "");
+    if (t) marks[i].removeChild(t);
+  }
+  svgHero.addEventListener("pointermove", function (ev) {
+    tipHero.track(userPos(svgHero, ev, HW, HH), HW, HH, 26);
+  });
+  svgHero.addEventListener("pointerleave", function () { tipHero.hide(); });
+}
 
 /* ------------------------------------------------------------------- shelf */
 const svgShelf = document.getElementById("shelf");
@@ -485,13 +519,22 @@ function placeCloud() {
   for (let i = 0; i < pts.length; i++) {
     const p = pts[i], c = kids[i];
     const lx = Math.log10(p.a), ly = Math.log10(p.d);
-    if (lx < view.x0 || lx > view.x1 || ly < view.y0 || ly > view.y1) {
+    if (lx < view.x0 || lx > view.x1 || ly < view.y0 || ly > view.y1 || !inEra(p)) {
       if (c.getAttribute("cx") !== "-99") c.setAttribute("cx", -99);
       continue;
     }
     c.setAttribute("cx", spx(lx).toFixed(1));
     c.setAttribute("cy", spy(ly).toFixed(1));
   }
+}
+let era = "all";
+function inEra(p) {
+  if (era === "all") return true;
+  const y = 2026 - p.a;
+  if (era === "anc") return y < 1500;
+  if (era === "ear") return y >= 1500 && y < 1800;
+  if (era === "c19") return y >= 1800 && y < 1900;
+  return y >= 1900;
 }
 function scatter() {
   clear(svgScatter);
@@ -519,6 +562,7 @@ function scatter() {
   D.scatter.points.forEach(function (p) {
     const lx = Math.log10(p.a), ly = Math.log10(p.d);
     if (lx < view.x0 || lx > view.x1 || ly < view.y0 || ly > view.y1) return;
+    if (!inEra(p)) return;
     shown++;
     const X = spx(lx), Y = spy(ly);
     tipScatter.add(X, Y, p.t || "?",
@@ -531,7 +575,11 @@ function scatter() {
   svgScatter.appendChild(txt("READERS A MONTH", {class: "axl", x: 14, y: mid,
     "text-anchor": "middle", transform: "rotate(-90 14 " + mid + ")"}));
   const z = (HOME.x1 - HOME.x0) / (view.x1 - view.x0);
-  document.getElementById("scatnote").textContent =
+  const fc = document.getElementById("fcount");
+  if (fc) fc.textContent = fmt(shown) + " of " + fmt(D.scatter.meta.of) + " shown"
+    + (z > 1.05 ? DOT + "zoomed " + z.toFixed(1) + "x" : "");
+  const note = document.getElementById("scatnote");
+  if (note) note.textContent =
     "Every " + D.scatter.meta.stride + "th work, " + fmt(D.scatter.meta.kept) + " of "
     + fmt(D.scatter.meta.of) + DOT + fmt(shown) + " in view"
     + (z > 1.05 ? DOT + "zoomed " + z.toFixed(1) + "x" : "") + ".";
@@ -563,6 +611,8 @@ svgScatter.addEventListener("pointerdown", function (ev) {
 svgScatter.addEventListener("pointerup", function () {
   dragging = null;
   svgScatter.classList.remove("drag");
+  if (ptsG) ptsG.setAttribute("transform", "");
+  scatter();
 });
 svgScatter.addEventListener("pointermove", function (ev) {
   const u = userPos(svgScatter, ev, SC.W, SC.H);
@@ -573,7 +623,12 @@ svgScatter.addEventListener("pointermove", function (ev) {
              * (dragging.v.y1 - dragging.v.y0);
     view = {x0: dragging.v.x0 - dx, x1: dragging.v.x1 - dx,
             y0: dragging.v.y0 + dy, y1: dragging.v.y1 + dy};
-    scatterSoon();
+    // A pan is a pure translation, so shifting the group is exact AND costs one
+    // attribute write instead of repositioning every circle. Axes redraw on the frame;
+    // the cloud snaps back to real coordinates when the drag ends.
+    if (ptsG) ptsG.setAttribute("transform",
+      "translate(" + (u.x - dragging.u.x).toFixed(1) + ","
+      + (u.y - dragging.u.y).toFixed(1) + ")");
     tipScatter.hide();
     return;
   }
@@ -628,7 +683,6 @@ function wiki() {
     svgWiki.appendChild(txt(v >= 1000000 ? (v / 1000000) + "M" : yLab(v),
       {class: "ax", x: WK.L - 8, y: py(l) + 4, "text-anchor": "end"}));
   });
-  const placed = [];
   pts.forEach(function (p) {
     const lx = Math.log10(p.a), ly = Math.log10(p.w);
     if (lx < x0 || lx > x1 || ly < y0 || ly > y1) return;
@@ -637,13 +691,6 @@ function wiki() {
       r: 3.4, opacity: 0.6}));
     tipWiki.add(X, Y, p.t, fmt(p.a) + " yrs old" + DOT + fmt(p.w)
       + " Wikipedia views a year" + DOT + fmt(p.d) + " Gutenberg readers a month");
-    if (placed.length < 14 && !placed.some(function (o) {
-      return Math.abs(o.X - X) < 130 && Math.abs(o.Y - Y) < 13;
-    })) {
-      placed.push({X: X, Y: Y});
-      svgWiki.appendChild(txt(p.t.replace(/[;:].*$/, "").slice(0, 30),
-        {class: "lbl", x: (X + 7).toFixed(1), y: (Y + 3.5).toFixed(1)}));
-    }
   });
   svgWiki.appendChild(txt("AGE IN YEARS", {class: "axl",
     x: (WK.L + (WK.W - WK.R)) / 2, y: WK.H - 8, "text-anchor": "middle"}));
@@ -716,6 +763,17 @@ function draw() {
   scatter();
 }
 draw();
+
+/* the era filter above the dot plot */
+document.querySelectorAll("#filters .chip").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    document.querySelectorAll("#filters .chip").forEach(function (b) {
+      b.classList.toggle("on", b === btn);
+    });
+    era = btn.getAttribute("data-era");
+    scatter();
+  });
+});
 
 </script>
 </body>

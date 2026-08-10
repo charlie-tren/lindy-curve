@@ -150,8 +150,22 @@ def main():
                 wk = pg.evaluate("document.querySelectorAll('#wiki circle.pt').length")
                 check(wk > 80, f"{tag}: Wikipedia chart has {wk} points, expected 100+")
                 # the summary cards were removed, so the chart itself has to carry it
-                check(pg.locator("#wiki text.lbl").count() >= 5,
-                      f"{tag}: the Wikipedia chart names no works")
+                check(pg.locator("#wiki text.lbl").count() == 0,
+                      f"{tag}: the Wikipedia chart is labelling works - hover only")
+                # the era filter must actually remove points, not just restyle a chip
+                if w >= 1280:
+                    before = pg.evaluate("""() => [...document.querySelectorAll(
+                        '#scatter circle.pt')].filter(c => c.getAttribute('cx') !== '-99')
+                        .length""")
+                    pg.click('#filters .chip[data-era="anc"]')
+                    pg.wait_for_timeout(250)
+                    after = pg.evaluate("""() => [...document.querySelectorAll(
+                        '#scatter circle.pt')].filter(c => c.getAttribute('cx') !== '-99')
+                        .length""")
+                    check(after < before / 2,
+                          f"{tag}: era filter went {before} -> {after}, expected far fewer")
+                    pg.click('#filters .chip[data-era="all"]')
+                    pg.wait_for_timeout(200)
 
                 # every view draws something
                 counts = pg.evaluate("""() => ({

@@ -59,8 +59,12 @@ function tipper(tipId, svg) {
       tip.appendChild(b);
       tip.appendChild(sp);
       const r = svg.getBoundingClientRect();
-      tip.style.left = Math.min(Math.max(0, r.width - 268),
-                                best.x / W * r.width + 12) + "px";
+      // flip to the left of the point when it would otherwise run off the edge, which
+      // was cutting long book titles in half
+      const tw = tip.offsetWidth || 240;
+      let lx = best.x / W * r.width + 12;
+      if (lx + tw > r.width - 4) lx = Math.max(0, best.x / W * r.width - tw - 12);
+      tip.style.left = lx + "px";
       tip.style.top = Math.max(0, best.y / H * r.height - 48) + "px";
       tip.classList.add("on");
     }
@@ -71,6 +75,26 @@ function userPos(svg, ev, W, H) {
   return {x: (ev.clientX - r.left) / r.width * W, y: (ev.clientY - r.top) / r.height * H};
 }
 
+
+/* ------------------------------------------------- the hero curve gets hover too */
+const svgHero = document.querySelector("#v-curve figure svg");
+if (svgHero && document.getElementById("tip6")) {
+  const tipHero = tipper("tip6", svgHero);
+  const HW = svgHero.viewBox.baseVal.width, HH = svgHero.viewBox.baseVal.height;
+  const marks = svgHero.querySelectorAll("circle.mk");
+  const labels = svgHero.querySelectorAll("text.mkl");
+  for (let i = 0; i < marks.length; i++) {
+    const t = marks[i].querySelector("title");
+    tipHero.add(+marks[i].getAttribute("cx"), +marks[i].getAttribute("cy"),
+      labels[i] ? labels[i].textContent : "?",
+      t ? t.textContent.replace(/^[^·]*·\s*/, "") : "");
+    if (t) marks[i].removeChild(t);
+  }
+  svgHero.addEventListener("pointermove", function (ev) {
+    tipHero.track(userPos(svgHero, ev, HW, HH), HW, HH, 26);
+  });
+  svgHero.addEventListener("pointerleave", function () { tipHero.hide(); });
+}
 
 /* ------------------------------------------------------------------- shelf */
 const svgShelf = document.getElementById("shelf");
@@ -231,13 +255,22 @@ function placeCloud() {
   for (let i = 0; i < pts.length; i++) {
     const p = pts[i], c = kids[i];
     const lx = Math.log10(p.a), ly = Math.log10(p.d);
-    if (lx < view.x0 || lx > view.x1 || ly < view.y0 || ly > view.y1) {
+    if (lx < view.x0 || lx > view.x1 || ly < view.y0 || ly > view.y1 || !inEra(p)) {
       if (c.getAttribute("cx") !== "-99") c.setAttribute("cx", -99);
       continue;
     }
     c.setAttribute("cx", spx(lx).toFixed(1));
     c.setAttribute("cy", spy(ly).toFixed(1));
   }
+}
+let era = "all";
+function inEra(p) {
+  if (era === "all") return true;
+  const y = 2026 - p.a;
+  if (era === "anc") return y < 1500;
+  if (era === "ear") return y >= 1500 && y < 1800;
+  if (era === "c19") return y >= 1800 && y < 1900;
+  return y >= 1900;
 }
 function scatter() {
   clear(svgScatter);
@@ -265,6 +298,7 @@ function scatter() {
   D.scatter.points.forEach(function (p) {
     const lx = Math.log10(p.a), ly = Math.log10(p.d);
     if (lx < view.x0 || lx > view.x1 || ly < view.y0 || ly > view.y1) return;
+    if (!inEra(p)) return;
     shown++;
     const X = spx(lx), Y = spy(ly);
     tipScatter.add(X, Y, p.t || "?",
@@ -277,7 +311,11 @@ function scatter() {
   svgScatter.appendChild(txt("READERS A MONTH", {class: "axl", x: 14, y: mid,
     "text-anchor": "middle", transform: "rotate(-90 14 " + mid + ")"}));
   const z = (HOME.x1 - HOME.x0) / (view.x1 - view.x0);
-  document.getElementById("scatnote").textContent =
+  const fc = document.getElementById("fcount");
+  if (fc) fc.textContent = fmt(shown) + " of " + fmt(D.scatter.meta.of) + " shown"
+    + (z > 1.05 ? DOT + "zoomed " + z.toFixed(1) + "x" : "");
+  const note = document.getElementById("scatnote");
+  if (note) note.textContent =
     "Every " + D.scatter.meta.stride + "th work, " + fmt(D.scatter.meta.kept) + " of "
     + fmt(D.scatter.meta.of) + DOT + fmt(shown) + " in view"
     + (z > 1.05 ? DOT + "zoomed " + z.toFixed(1) + "x" : "") + ".";
@@ -309,6 +347,8 @@ svgScatter.addEventListener("pointerdown", function (ev) {
 svgScatter.addEventListener("pointerup", function () {
   dragging = null;
   svgScatter.classList.remove("drag");
+  if (ptsG) ptsG.setAttribute("transform", "");
+  scatter();
 });
 svgScatter.addEventListener("pointermove", function (ev) {
   const u = userPos(svgScatter, ev, SC.W, SC.H);
@@ -319,7 +359,12 @@ svgScatter.addEventListener("pointermove", function (ev) {
              * (dragging.v.y1 - dragging.v.y0);
     view = {x0: dragging.v.x0 - dx, x1: dragging.v.x1 - dx,
             y0: dragging.v.y0 + dy, y1: dragging.v.y1 + dy};
-    scatterSoon();
+    // A pan is a pure translation, so shifting the group is exact AND costs one
+    // attribute write instead of repositioning every circle. Axes redraw on the frame;
+    // the cloud snaps back to real coordinates when the drag ends.
+    if (ptsG) ptsG.setAttribute("transform",
+      "translate(" + (u.x - dragging.u.x).toFixed(1) + ","
+      + (u.y - dragging.u.y).toFixed(1) + ")");
     tipScatter.hide();
     return;
   }
@@ -374,7 +419,6 @@ function wiki() {
     svgWiki.appendChild(txt(v >= 1000000 ? (v / 1000000) + "M" : yLab(v),
       {class: "ax", x: WK.L - 8, y: py(l) + 4, "text-anchor": "end"}));
   });
-  const placed = [];
   pts.forEach(function (p) {
     const lx = Math.log10(p.a), ly = Math.log10(p.w);
     if (lx < x0 || lx > x1 || ly < y0 || ly > y1) return;
@@ -383,13 +427,6 @@ function wiki() {
       r: 3.4, opacity: 0.6}));
     tipWiki.add(X, Y, p.t, fmt(p.a) + " yrs old" + DOT + fmt(p.w)
       + " Wikipedia views a year" + DOT + fmt(p.d) + " Gutenberg readers a month");
-    if (placed.length < 14 && !placed.some(function (o) {
-      return Math.abs(o.X - X) < 130 && Math.abs(o.Y - Y) < 13;
-    })) {
-      placed.push({X: X, Y: Y});
-      svgWiki.appendChild(txt(p.t.replace(/[;:].*$/, "").slice(0, 30),
-        {class: "lbl", x: (X + 7).toFixed(1), y: (Y + 3.5).toFixed(1)}));
-    }
   });
   svgWiki.appendChild(txt("AGE IN YEARS", {class: "axl",
     x: (WK.L + (WK.W - WK.R)) / 2, y: WK.H - 8, "text-anchor": "middle"}));
@@ -462,3 +499,14 @@ function draw() {
   scatter();
 }
 draw();
+
+/* the era filter above the dot plot */
+document.querySelectorAll("#filters .chip").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    document.querySelectorAll("#filters .chip").forEach(function (b) {
+      b.classList.toggle("on", b === btn);
+    });
+    era = btn.getAttribute("data-era");
+    scatter();
+  });
+});

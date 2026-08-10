@@ -96,7 +96,7 @@ a.back{text-decoration:none;display:inline-flex;align-items:center;gap:.4rem}
 a.back .arw{display:inline-block;transition:transform .25s}
 a.back:hover .arw{transform:translateX(-4px)}
 .shelfwrap{position:relative}
-#scatwrap,#medwrap,#wikiwrap,.shelfwrap{position:relative}
+#scatwrap,#medwrap,#wikiwrap,#herowrap,.shelfwrap{position:relative}
 .tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
   background:var(--ground);border:1px solid var(--rule);padding:6px 9px;
   font:400 12px/1.42 var(--body);color:var(--ink);width:max-content;
@@ -105,6 +105,15 @@ a.back:hover .arw{transform:translateX(-4px)}
 .tip.on{opacity:1}
 .tip b{display:block;font-weight:400;color:var(--gilt)}
 .tip span{font:400 10.5px/1.5 var(--mono);color:var(--dim)}
+.filters{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+.flab{font:700 9.5px/1 var(--disp);letter-spacing:.15em;text-transform:uppercase;
+  color:var(--gilt);margin-right:.2rem}
+.chip{appearance:none;cursor:pointer;background:transparent;color:var(--dim);
+  border:1px solid var(--rule);border-radius:999px;padding:.3rem .66rem;
+  font:400 11.5px/1 var(--body);transition:color .15s,border-color .15s,background .15s}
+.chip:hover{color:var(--ink);border-color:var(--gilt)}
+.chip.on{background:var(--gilt);border-color:var(--gilt);color:var(--ground)}
+.fcount{font:400 .74rem/1 var(--mono);color:var(--faint);margin-left:auto}
 .zoomhint{font:400 .78rem/1.5 var(--mono);color:var(--faint)}
 #scatter,#wiki{cursor:crosshair;touch-action:none;user-select:none;
   -webkit-user-select:none}
@@ -151,14 +160,16 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
     <span class="dot"></span><span id="togl">Dark</span></button>
 </header>
 
-<p class="lede">Old things are supposed to endure: what has lasted a century is a fair
-bet to last another. Books make that testable, because Project Gutenberg publishes how
-often each of its texts was read this month. Here are %%WORKS%% of them, by age.</p>
+<p class="lede">Homer has been read for two and a half thousand years. Most books are
+forgotten inside ten. The Lindy effect says that gap is the point: whatever has already
+lasted is the safest bet to last again. Project Gutenberg quietly publishes how many people
+opened each of its texts this month, which makes the claim testable - so here are
+%%WORKS%% books, oldest to newest, and how many people are reading them right now.</p>
 
 <!-- ============================================================ the curve -->
 <section class="view" id="v-curve">
 
-  <figure>%%HERO%%</figure>
+  <figure id="herowrap">%%HERO%%<div class="tip" id="tip6"></div></figure>
 
   <figure class="shelfwrap"><svg id="shelf" viewBox="0 0 960 260" role="img"
     aria-label="One bar per age step, height is readership"></svg>
@@ -189,27 +200,26 @@ often each of its texts was read this month. Here are %%WORKS%% of them, by age.
 
 <!-- =========================================================== the scatter -->
 <section class="view" id="v-scatter">
+  <div class="filters" id="filters" role="group" aria-label="Filter by era">
+    <span class="flab">Show</span>
+    <button type="button" class="chip on" data-era="all">Everything</button>
+    <button type="button" class="chip" data-era="anc">Before 1500</button>
+    <button type="button" class="chip" data-era="ear">1500 to 1800</button>
+    <button type="button" class="chip" data-era="c19">1800s</button>
+    <button type="button" class="chip" data-era="mod">1900 on</button>
+    <span class="fcount" id="fcount"></span>
+  </div>
   <figure id="scatwrap"><svg id="scatter" viewBox="0 0 960 470" role="img"
     aria-label="Every work by age against downloads, log scales"></svg>
     <div class="tip" id="tip"></div></figure>
-  <p class="zoomhint">Scroll to zoom, drag to pan, hover a point for the title,
-  double-click to reset.</p>
-  <div class="card">
-    <h3>Every work, one dot</h3>
-    <p class="sub">Age across, readers up, both on log scales. Scroll to zoom, drag to
-    pan, hover for a title. The oldest works sit at the right of the cloud rather than
-    above or below it, which is the whole finding in one picture.</p>
-    <p class="k" id="scatnote"></p>
-  </div>
 </section>
 
 <section class="view" id="v-wiki">
-  <h2>A second opinion</h2>
+  <h2>Checked against a different measure</h2>
   <p class="sub">Gutenberg's count has a floor - %%BASELINE%%% of the corpus sits between
   300 and 600 a month, too uniform to be readers - so the finding needs a measure that does
   not share the flaw. Wikipedia pageviews have no floor and run monthly back to 2016, which
   also gives the multi-year average Gutenberg cannot.</p>
-  <p class="zoomhint">Scroll to zoom, drag to pan, double-click to reset.</p>
   <figure id="wikiwrap"><svg id="wiki" viewBox="0 0 960 420" role="img"
     aria-label="Wikipedia pageviews a year against age, for well-known works"></svg>
     <div class="tip" id="tip5"></div></figure>
