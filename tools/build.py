@@ -77,7 +77,7 @@ def hero_svg(callouts, w=960, h=340):
              f'x="{L - 22}" y="{(T + h - B) / 2:.0f}" text-anchor="middle">'
              'STILL READ</text>')
     o.append(f'<text class="axl" x="{L}" y="{T - 14}">'
-             'THE SHAPE THE LINDY EFFECT PREDICTS</text>')
+             'THE PREDICTION, NOT THE DATA</text>')
     o.append("</svg>")
     return "\n".join(o)
 

@@ -137,16 +137,22 @@ function shelf(st) {
   const bars = st.shelf.bars.slice().reverse();
   if (!bars.length) return;
   const counts = bars.map(function (b) { return b.cnt[thresh] || 0; });
-  const top = Math.max(4, Math.max.apply(null, counts) * 1.15);
+  /* LOG scale, because the counts span three orders of magnitude - 3,220 books from the
+     1900s against 1 from the 800s. On a linear axis twenty of the twenty-six centuries
+     are invisible. The cost is that bar LENGTH is no longer proportional to the count,
+     so the axis is labelled and the tooltip gives the number outright. */
+  const hi = Math.log10(Math.max(10, Math.max.apply(null, counts) * 1.35));
+  const lo = 0;                                    // one book sits on the baseline
   const bw = (W - L - R) / bars.length;
-  const yv = v => H - B - v / top * (H - T - B);
-  const step = top > 4000 ? 2000 : top > 1500 ? 500 : top > 400 ? 200 : top > 100 ? 50 : 10;
-  for (let g = 0; g <= top; g += step) {
+  const yv = v => v <= 0 ? H - B
+    : H - B - (Math.log10(v) - lo) / (hi - lo) * (H - T - B);
+  [1, 3, 10, 30, 100, 300, 1000, 3000].forEach(function (g) {
+    if (Math.log10(g) > hi) return;
     svgShelf.appendChild(el("line", {class: "g", x1: L, y1: yv(g).toFixed(1),
       x2: W - R, y2: yv(g).toFixed(1)}));
     svgShelf.appendChild(txt(fmt(g), {class: "ax", x: L - 8, y: (yv(g) + 4).toFixed(1),
       "text-anchor": "end"}));
-  }
+  });
   bars.forEach(function (b, i) {
     const x = L + i * bw;
     const c = counts[i];
@@ -168,7 +174,7 @@ function shelf(st) {
       + DOT + "best known: " + t[0]);
   });
   svgShelf.appendChild(el("line", {class: "g", x1: L, y1: H - B, x2: W - R, y2: H - B}));
-  svgShelf.appendChild(txt("BOOKS STILL READ THAT OFTEN, BY CENTURY",
+  svgShelf.appendChild(txt("BOOKS STILL READ THAT OFTEN, BY CENTURY (LOG SCALE)",
     {class: "axl", x: L, y: T - 4}));
   svgShelf.appendChild(txt("NEWEST", {class: "axl", x: L + 2, y: H - 6}));
   svgShelf.appendChild(txt("OLDEST", {class: "axl", x: W - R - 2, y: H - 6,
