@@ -76,6 +76,34 @@ function userPos(svg, ev, W, H) {
 }
 
 
+/* A least-squares fit in log-log space plus R squared. Drawn on both dot plots so the
+   "there is no slope" claim is a measured line rather than an eyeball judgement. */
+function fitLine(pairs) {
+  const n = pairs.length;
+  if (n < 8) return null;
+  let sx = 0, sy = 0;
+  for (const q of pairs) { sx += q[0]; sy += q[1]; }
+  const mx = sx / n, my = sy / n;
+  let sxy = 0, sxx = 0, syy = 0;
+  for (const q of pairs) {
+    const dx = q[0] - mx, dy = q[1] - my;
+    sxy += dx * dy; sxx += dx * dx; syy += dy * dy;
+  }
+  if (sxx === 0 || syy === 0) return null;
+  const slope = sxy / sxx;
+  return {slope: slope, intercept: my - slope * mx,
+          r2: (sxy * sxy) / (sxx * syy), n: n};
+}
+function drawFit(svg, fit, x0, x1, px, py, labelX, labelY) {
+  if (!fit) return;
+  const ya = fit.intercept + fit.slope * x0, yb = fit.intercept + fit.slope * x1;
+  svg.appendChild(el("line", {class: "fit", x1: px(x0).toFixed(1), y1: py(ya).toFixed(1),
+    x2: px(x1).toFixed(1), y2: py(yb).toFixed(1)}));
+  svg.appendChild(txt("best fit  r² = " + fit.r2.toFixed(3)
+    + "  (n = " + fmt(fit.n) + ")", {class: "fitl", x: labelX, y: labelY,
+    "text-anchor": "end"}));
+}
+
 /* ------------------------------------------------- the hero curve gets hover too */
 const svgHero = document.querySelector("#v-curve figure svg");
 if (svgHero && document.getElementById("tip6")) {
@@ -314,6 +342,13 @@ function scatter() {
       (p.au ? p.au + DOT : "") + fmt(p.a) + " yrs old" + DOT + fmt(p.d)
       + " readers a month");
   });
+  const fitPairs = [];
+  D.scatter.points.forEach(function (p) {
+    if (!inEra(p)) return;
+    fitPairs.push([Math.log10(p.a), Math.log10(p.d)]);
+  });
+  drawFit(svgScatter, fitLine(fitPairs), view.x0, view.x1, spx, spy,
+    SC.W - SC.R - 4, SC.T + 4);
   svgScatter.appendChild(txt("AGE IN YEARS", {class: "axl",
     x: (SC.L + (SC.W - SC.R)) / 2, y: SC.H - 8, "text-anchor": "middle"}));
   const mid = (SC.T + (SC.H - SC.B)) / 2;
@@ -439,6 +474,9 @@ function wiki() {
     tipWiki.add(X, Y, p.t, fmt(p.a) + " yrs old" + DOT + fmt(p.w)
       + " Wikipedia views a year" + DOT + fmt(p.d) + " Gutenberg readers a month");
   });
+  drawFit(svgWiki, fitLine(pts.map(function (q) {
+    return [Math.log10(q.a), Math.log10(q.w)];
+  })), x0, x1, px, py, WK.W - WK.R - 4, WK.T + 4);
   svgWiki.appendChild(txt("AGE IN YEARS", {class: "axl",
     x: (WK.L + (WK.W - WK.R)) / 2, y: WK.H - 8, "text-anchor": "middle"}));
   const wmid = (WK.T + (WK.H - WK.B)) / 2;

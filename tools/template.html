@@ -115,8 +115,8 @@ a.back:hover .arw{transform:translateX(-4px)}
 .chip.on{background:var(--gilt);border-color:var(--gilt);color:var(--ground)}
 .fcount{font:400 .74rem/1 var(--mono);color:var(--faint);margin-left:auto}
 .zoomhint{font:400 .78rem/1.5 var(--mono);color:var(--faint)}
-#scatter,#wiki{cursor:crosshair;touch-action:none;user-select:none;
-  -webkit-user-select:none}
+figure svg{user-select:none;-webkit-user-select:none}
+#scatter,#wiki{cursor:crosshair;touch-action:none}
 #scatter.drag,#wiki.drag{cursor:grabbing}
 footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
        display:flex;align-items:baseline;justify-content:space-between;gap:1.15rem;
@@ -141,6 +141,8 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
 .nn{font:400 8.5px var(--mono);fill:var(--faint)}
 .med{fill:none;stroke:var(--ox);stroke-width:2}
 .medpt{fill:var(--ox)}
+.fit{stroke:var(--ox);stroke-width:2;stroke-dasharray:7 5;opacity:.85}
+.fitl{font:700 10px var(--disp);letter-spacing:.1em;fill:var(--ox)}
 @media (max-width:640px){
   .ctl{grid-template-columns:1fr}
   .out{text-align:left}
@@ -160,11 +162,9 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
     <span class="dot"></span><span id="togl">Dark</span></button>
 </header>
 
-<p class="lede">Homer has been read for two and a half thousand years. Most books are
-forgotten inside ten. The Lindy effect says that gap is the point: whatever has already
-lasted is the safest bet to last again. Project Gutenberg quietly publishes how many people
-opened each of its texts this month, which makes the claim testable - so here are
-%%WORKS%% books, oldest to newest, and how many people are reading them right now.</p>
+<p class="lede">Homer is still read after 2,500 years. Most books are forgotten inside
+ten. The Lindy effect says that gap is the point - and Gutenberg publishes how many people
+opened each text this month, so it can be checked. Here are %%WORKS%% books, by age.</p>
 
 <!-- ============================================================ the curve -->
 <section class="view" id="v-curve">
@@ -233,9 +233,8 @@ opened each of its texts this month, which makes the claim testable - so here ar
 <section class="view" id="v-wiki">
   <h2>Checked against a different measure</h2>
   <p class="sub">Gutenberg's count has a floor - %%BASELINE%%% of the corpus sits between
-  300 and 600 a month, too uniform to be readers - so the finding needs a measure that does
-  not share the flaw. Wikipedia pageviews have no floor and run monthly back to 2016, which
-  also gives the multi-year average Gutenberg cannot.</p>
+  300 and 600 a month, too uniform to be readers. Wikipedia pageviews have none, and run
+  back to 2016.</p>
   <figure id="wikiwrap"><svg id="wiki" viewBox="0 0 960 420" role="img"
     aria-label="Wikipedia pageviews a year against age, for well-known works"></svg>
     <div class="tip" id="tip5"></div></figure>
