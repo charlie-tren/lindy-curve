@@ -518,6 +518,8 @@ function wiki() {
   drawFit(svgWiki, fitLine(pts.map(function (q) {
     return [Math.log10(q.a), Math.log10(q.w)];
   })), x0, x1, px, py, WK.W - WK.R - 4, WK.T + 4);
+  svgWiki.appendChild(txt(fmt(w.n) + " of " + fmt(w.tried) + " works matched an article",
+    {class: "note", x: WK.L + 8, y: WK.T + 14}));
   svgWiki.appendChild(txt("AGE IN YEARS", {class: "axl",
     x: (WK.L + (WK.W - WK.R)) / 2, y: WK.H - 8, "text-anchor": "middle"}));
   const wmid = (WK.T + (WK.H - WK.B)) / 2;
@@ -528,6 +530,7 @@ function wiki() {
     if (n) n.textContent = v;
   };
   set("wn", fmt(w.n));
+  set("wt", fmt(w.tried));
   set("wrho", (w.rho_wiki >= 0 ? "+" : "−") + Math.abs(w.rho_wiki).toFixed(3));
   set("wgut", (w.rho_gut >= 0 ? "+" : "−") + Math.abs(w.rho_gut).toFixed(3));
   set("wold", fmt(w.med_old));

@@ -148,7 +148,13 @@ def main():
                 check(pg.locator("#floor").count() == 0,
                       f"{tag}: the threshold slider is still present")
                 wk = pg.evaluate("document.querySelectorAll('#wiki circle.pt').length")
-                check(wk > 80, f"{tag}: Wikipedia chart has {wk} points, expected 100+")
+                check(wk > 200, f"{tag}: Wikipedia chart has {wk} points, expected 200+")
+                # the match rate must be stated - the chart's slope is mostly a matching
+                # artefact, so publishing it without the caveat would be a false claim
+                check("matched an article" in pg.inner_text("#v-wiki"),
+                      f"{tag}: the Wikipedia match rate is not disclosed on the page")
+                check(pg.inner_text("#wn").strip() and pg.inner_text("#wt").strip(),
+                      f"{tag}: the matched/tried counts did not render")
                 # the summary cards were removed, so the chart itself has to carry it
                 check(pg.locator("#wiki text.lbl").count() == 0,
                       f"{tag}: the Wikipedia chart is labelling works - hover only")
