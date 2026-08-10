@@ -160,49 +160,41 @@ def intern_title(t, au):
     return _TIDX[key]
 
 
-def shelf(rows, buckets=20):
-    """HOW MANY books in each age group are still read above a threshold.
+def shelf(rows, buckets=None):
+    """How many books from each CENTURY clear a readership bar.
 
-    Two earlier versions of this chart were wrong. The first plotted the single
-    most-downloaded work per slot - a maximum, so one outlier set every bar and the chart
-    drew the canon rather than the corpus. The second plotted the median, which was honest
-    but nearly flat and therefore said very little.
+    Charlie's spec: keep only books read more than X times a month, then just count them
+    per period. Simple, and it answers a question the earlier versions could not - where
+    do the books people actually still read come from?
 
-    A COUNT above a readership bar is the statistic that actually matches the question:
-    of the books this old, how many are still genuinely being read? That is a survival
-    rate, which is what the Lindy effect is about.
+    Read it knowing it is a raw count, so it reflects what Gutenberg HOLDS as much as
+    what endures: there are 27,719 works from the 1800s and 134 from the whole medieval
+    period, so the recent centuries will tower whatever the truth about endurance is.
+    The tooltip carries the share of each century as well as the count, which is the
+    rate-based reading of the same bar.
 
-    Equal-count buckets rather than equal-width ones, because ages are wildly skewed -
-    fixed decades would give 3,000 works to the 1800s and one to the 1300s, and the thin
-    bars would swing on noise. Every bar here rests on the same number of books, so their
-    heights are comparable, which is the whole point of putting them side by side.
+    Two earlier versions of this chart were wrong: the first plotted the single
+    most-downloaded work per age slot (a maximum, so one outlier set every bar and it drew
+    the canon rather than the corpus); the second plotted a median, which was honest but
+    so flat it said very little.
     """
-    ordered = sorted(rows, key=lambda r: r["a"])
-    n = len(ordered)
-    size = max(1, n // buckets)
+    per = defaultdict(list)
+    for r in rows:
+        per[(r["y"] // 100) * 100].append(r)
     out = []
-    for i in range(buckets):
-        chunk = ordered[i * size:(i + 1) * size if i < buckets - 1 else n]
-        if len(chunk) < 20:
+    for c in sorted(per):
+        chunk = per[c]
+        if len(chunk) < 5:
             continue
-        dls = sorted(r["d"] for r in chunk)
         top = max(chunk, key=lambda r: r["d"])
         out.append({
-            "k": i,
-            # how many books in this age group clear each readership bar. Because every
-            # bucket holds the same number of books, these counts are directly
-            # comparable - which is the whole reason for equal-count buckets.
-            "cnt": {str(t): sum(1 for d in dls if d >= t) for t in THRESHOLDS},
-            "med": round(statistics.median(dls)),
-            "p75": dls[int(len(dls) * .75)],
+            "c": c,
             "n": len(chunk),
-            "lo": min(r["a"] for r in chunk),
-            "hi": max(r["a"] for r in chunk),
-            "y": statistics.median([r["y"] for r in chunk]),
+            "cnt": {str(t): sum(1 for r in chunk if r["d"] >= t) for t in THRESHOLDS},
+            "y": c + 50,
             "i": intern_title(top["t"][:95], top["au"].split(",")[0][:30]),
-            "topd": top["d"],
         })
-    return {"buckets": buckets, "bars": out, "thresholds": THRESHOLDS}
+    return {"bars": out, "thresholds": THRESHOLDS}
 
 
 def callouts(rows):

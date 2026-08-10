@@ -124,25 +124,23 @@ if (svgHero && document.getElementById("tip6")) {
   svgHero.addEventListener("pointerleave", function () { tipHero.hide(); });
 }
 
-/* ------------------------- shelf: how many books this old are still read that much */
+/* --------------- shelf: how many books from each century are still read above a bar */
 const svgShelf = document.getElementById("shelf");
 const tipShelf = tipper("tip3", svgShelf);
-const SH = {W: 960, H: 260};
+const SH = {W: 960, H: 280};
 let thresh = "1000";
 function shelf(st) {
   clear(svgShelf);
   tipShelf.reset();
-  const W = SH.W, H = SH.H, L = 54, R = 12, T = 18, B = 32;
-  const bars = st.shelf.bars;
+  const W = SH.W, H = SH.H, L = 58, R = 14, T = 18, B = 56;
+  // newest on the LEFT, oldest on the RIGHT, matching the curve above
+  const bars = st.shelf.bars.slice().reverse();
   if (!bars.length) return;
-  /* A COUNT, not an average. Every bucket holds the same number of books, so "how many
-     of these 3,374 are still read more than 1,000 times a month" is comparable across
-     the age axis - which a median hid and a maximum actively misrepresented. */
   const counts = bars.map(function (b) { return b.cnt[thresh] || 0; });
-  const top = Math.max(4, Math.max.apply(null, counts) * 1.18);
-  const bw = (W - L - R) / st.shelf.buckets;
+  const top = Math.max(4, Math.max.apply(null, counts) * 1.15);
+  const bw = (W - L - R) / bars.length;
   const yv = v => H - B - v / top * (H - T - B);
-  const step = top > 400 ? 100 : top > 150 ? 50 : top > 60 ? 20 : 5;
+  const step = top > 4000 ? 2000 : top > 1500 ? 500 : top > 400 ? 200 : top > 100 ? 50 : 10;
   for (let g = 0; g <= top; g += step) {
     svgShelf.appendChild(el("line", {class: "g", x1: L, y1: yv(g).toFixed(1),
       x2: W - R, y2: yv(g).toFixed(1)}));
@@ -150,32 +148,35 @@ function shelf(st) {
       "text-anchor": "end"}));
   }
   bars.forEach(function (b, i) {
-    // k rises WITH age, so k=0 (newest) sits at the LEFT, matching the curve above.
-    const x = L + b.k * bw;
+    const x = L + i * bw;
     const c = counts[i];
     const yTop = yv(c);
     svgShelf.appendChild(el("rect", {x: (x + bw * 0.14).toFixed(1), y: yTop.toFixed(1),
       width: (bw * 0.72).toFixed(1), height: Math.max(0.5, H - B - yTop).toFixed(1),
       fill: "var(--c" + band(b.y) + ")", "data-year": b.y}));
+    if (i % 2 === 0 || i === bars.length - 1) {
+      const g = el("g", {transform: "rotate(-44 " + (x + bw / 2).toFixed(1) + " "
+        + (H - B + 15) + ")"});
+      g.appendChild(txt(cLab(b.c), {class: "ax", x: (x + bw / 2).toFixed(1),
+        y: H - B + 15, "text-anchor": "end"}));
+      svgShelf.appendChild(g);
+    }
     const t = D.titles[b.i] || ["?", ""];
-    tipShelf.add(x + bw / 2, yTop,
-      fmt(b.lo) + " to " + fmt(b.hi) + " years old",
+    tipShelf.add(x + bw / 2, yTop, cLab(b.c),
       fmt(c) + " of " + fmt(b.n) + " books read more than " + fmt(+thresh)
-      + " times a month" + DOT + "that is " + (c / b.n * 100).toFixed(1) + "%"
+      + " times a month" + DOT + (c / b.n * 100).toFixed(1) + "% of the century"
       + DOT + "best known: " + t[0]);
   });
-  svgShelf.appendChild(el("line", {class: "g", x1: L, y1: H - B + 4, x2: W - R,
-    y2: H - B + 4}));
-  svgShelf.appendChild(txt("NEWEST", {class: "axl", x: L + 2, y: H - 10}));
-  svgShelf.appendChild(txt("BOOKS PER AGE GROUP OF " + fmt(bars[0].n)
-    + " STILL READ THAT OFTEN", {class: "axl", x: W / 2, y: H - 10,
-    "text-anchor": "middle"}));
-  svgShelf.appendChild(txt("OLDEST", {class: "axl", x: W - R - 2, y: H - 10,
+  svgShelf.appendChild(el("line", {class: "g", x1: L, y1: H - B, x2: W - R, y2: H - B}));
+  svgShelf.appendChild(txt("BOOKS STILL READ THAT OFTEN, BY CENTURY",
+    {class: "axl", x: L, y: T - 4}));
+  svgShelf.appendChild(txt("NEWEST", {class: "axl", x: L + 2, y: H - 6}));
+  svgShelf.appendChild(txt("OLDEST", {class: "axl", x: W - R - 2, y: H - 6,
     "text-anchor": "end"}));
   const sc = document.getElementById("shcount");
   if (sc) {
-    const tot = counts.reduce(function (a, b2) { return a + b2; }, 0);
-    sc.textContent = fmt(tot) + " books in total clear that bar";
+    sc.textContent = fmt(counts.reduce(function (a, v) { return a + v; }, 0))
+      + " books in total clear that bar";
   }
 }
 svgShelf.addEventListener("pointermove", function (ev) {

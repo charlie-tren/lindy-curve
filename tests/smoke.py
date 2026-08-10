@@ -231,7 +231,7 @@ def main():
                 check(counts["labels"] == 0,
                       f"{tag}: the dot plot is labelling {counts['labels']} works - it "
                       "should carry no names, only hover")
-                check(counts["bars"] >= 15, f"{tag}: only {counts['bars']} shelf bars")
+                check(counts["bars"] >= 20, f"{tag}: only {counts['bars']} shelf bars")
                 check(pg.locator("#shelf text.ax").count() >= 2,
                       f"{tag}: the shelf has no y-axis labels")
                 # the shelf plots MEDIANS per equal-count bucket, not the one most-read
@@ -241,8 +241,8 @@ def main():
                     return {n: r.length,
                             p75: 0};
                 }""")
-                check(sh["n"] >= 15 and sh["n"] <= 22,
-                      f"{tag}: {sh['n']} shelf bars, expected one per age bucket (~20)")
+                check(sh["n"] >= 20 and sh["n"] <= 30,
+                      f"{tag}: {sh['n']} shelf bars, expected one per century (~26)")
                 check("STILL READ THAT OFTEN" in pg.inner_text("#v-curve"),
                       f"{tag}: the shelf does not say what it is counting")
                 # changing the readership bar must change the bar heights, not just a label
