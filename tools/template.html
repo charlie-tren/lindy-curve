@@ -139,7 +139,8 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
 .cv{fill:none;stroke:var(--gilt);stroke-width:2.2}
 .cvf{fill:var(--gilt);opacity:.09}
 .mk{fill:var(--ox)}
-.mkl{font:400 10.5px var(--body);fill:var(--ink)}
+.mkl{font:400 10.5px var(--body);fill:var(--ink);paint-order:stroke;
+     stroke:var(--ground);stroke-width:3px;stroke-linejoin:round}
 .note{font:italic 400 12.5px var(--body);fill:var(--dim)}
 .lead{stroke:var(--dim);stroke-width:1}
 .pt{fill:var(--gilt)}
@@ -183,7 +184,7 @@ that survivors keep surviving can be checked. Here are %%WORKS%% books, by age.<
 
   <figure id="herowrap">%%HERO%%<div class="tip" id="tip6"></div></figure>
 
-  <h2>Books still read, per century</h2>
+  <h2>How many survive, century by century</h2>
   <div class="filters">
     <label><span>Books read more than</span><select id="f-thresh">
       <option value="200" selected>200 times a month</option>

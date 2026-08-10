@@ -146,7 +146,7 @@ def main():
                 # artefact, so publishing it without the caveat would be a false claim
                 check("most-read works of" in pg.inner_text("#v-scatter"),
                       f"{tag}: the dot plot does not say it is a truncated sample")
-                check("matched to an article" in pg.inner_text("#v-wiki"),
+                check("Wikipedia article" in pg.inner_text("#v-wiki"),
                       f"{tag}: the Wikipedia match rate is not disclosed on the page")
                 check(pg.locator("#v-curve svg title").count() == 0,
                       f"{tag}: hero marks still carry native <title> tooltips")
@@ -264,7 +264,7 @@ def main():
                 }""")
                 check(sh["n"] >= 20 and sh["n"] <= 30,
                       f"{tag}: {sh['n']} shelf bars, expected one per century (~26)")
-                check("BOOKS STILL READ, PER CENTURY" in pg.inner_text("#v-curve").upper(),
+                check("HOW MANY SURVIVE" in pg.inner_text("#v-curve").upper(),
                       f"{tag}: the shelf does not say what it is counting")
                 # changing the readership bar must change the bar heights, not just a label
                 if w >= 1280:

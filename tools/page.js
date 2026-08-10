@@ -501,8 +501,9 @@ function wiki() {
   svgWiki.appendChild(txt("PAGE VIEWS A YEAR", {class: "axl", x: 14,
     y: wmid, "text-anchor": "middle", transform: "rotate(-90 14 " + wmid + ")"}));
   const wn = document.getElementById("wnote");
-  if (wn) wn.textContent = fmt(w.n) + " of " + fmt(w.tried)
-    + " works matched to an article, averaged over ten years";
+  if (wn) wn.textContent = "Only works with their own Wikipedia article can appear: "
+    + fmt(w.n) + " of the " + fmt(w.tried)
+    + " most-read books had one. Views are a ten-year average.";
   const set = function (id, v) {
     const n = document.getElementById(id);
     if (n) n.textContent = v;

@@ -42,6 +42,10 @@ DOWNLOADS = re.compile(r"<pgterms:downloads[^>]*>(\d+)</pgterms:downloads>")
 TITLE = re.compile(r"<dcterms:title>(.*?)</dcterms:title>", re.S)
 TYPE = re.compile(r"<rdf:value>(\w+)</rdf:value>")
 LANG = re.compile(r"<dcterms:language>.*?<rdf:value[^>]*>([\w-]+)</rdf:value>", re.S)
+# ONLY the creator. The record also lists editors, translators and illustrators as
+# agents, and taking "the first agent with dates" filed Aesop - whose own entry carries
+# no dates - under his 1916 editor, putting a 6th-century-BC text among the moderns.
+CREATOR = re.compile(r"<dcterms:creator>(.*?)</dcterms:creator>", re.S)
 AGENT = re.compile(r"<pgterms:agent[^>]*>(.*?)</pgterms:agent>", re.S)
 NAME = re.compile(r"<pgterms:name>(.*?)</pgterms:name>", re.S)
 BIRTH = re.compile(r"<pgterms:birthdate[^>]*>(-?\d+)</pgterms:birthdate>")
@@ -152,10 +156,12 @@ def parse(archive):
                 skipped["no_downloads"] += 1
                 continue
 
-            # first agent carrying a usable date wins; many records list editors and
-            # translators after the author
+            # the creator's dates or nothing - never an editor's or translator's
             year = author = None
-            for block in AGENT.findall(x):
+            creator_blocks = []
+            for c in CREATOR.findall(x):
+                creator_blocks.extend(AGENT.findall(c))
+            for block in creator_blocks:
                 b, d = BIRTH.search(block), DEATH.search(block)
                 if not (b or d):
                     continue

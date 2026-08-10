@@ -49,8 +49,9 @@ THRESHOLDS = [0, 200, 600, 1000, 2000, 5000, 10000]
 CALLOUTS = ["Moby Dick", "Pride and Prejudice", "Romeo and Juliet", "The Odyssey",
             "Meditations", "The Iliad", "Frankenstein", "The Republic",
             "Beowulf", "The Divine Comedy", "Don Quixote", "The Prince",
-            "Confessions", "The Art of War", "Walden", "Ulysses",
-            "The Canterbury Tales", "Leviathan", "Faust", "Aesop"]
+            # "The Art of War" dropped: it resolves to Jomini 1829, not Sun Tzu
+            "Confessions", "Walden", "Ulysses",
+            "The Canterbury Tales", "Leviathan", "Faust"]
 
 
 def spearman(xs, ys):
@@ -213,13 +214,25 @@ def callouts(rows):
     seen, out = set(), []
     for r in sorted(rows, key=lambda r: -r["d"]):
         for name in CALLOUTS:
-            if name in seen or name.lower() not in r["t"].lower():
+            if name in seen:
+                continue
+            t = r["t"].lower()
+            n = name.lower()
+            # the search term has to open the title, not merely appear in it - otherwise
+            # "The Baby's Own Aesop" (Walter Crane, 1895) gets labelled "Aesop"
+            if not (t.startswith(n) or t.startswith("the " + n)
+                    or t.split(";")[0].split(":")[0].strip() == n):
                 continue
             seen.add(name)
             out.append({"n": name, "a": r["a"], "d": r["d"], "y": r["y"],
                         "au": r["au"].split(",")[0], "t": r["t"], "id": r["id"]})
             break
     return sorted(out, key=lambda o: -o["a"])
+
+
+def dash(t):
+    """House style is hyphens only, and these strings reach the page verbatim."""
+    return (t or "").replace("—", " - ").replace("–", "-")
 
 
 def wiki_block(rows):
@@ -251,8 +264,11 @@ def wiki_block(rows):
         "med_new": round(statistics.median(
             [v["peryear"] for v in ok if NOW - v["y"] <= 300] or [0])),
         "n_new": sum(1 for v in ok if NOW - v["y"] <= 300),
+        # Wikipedia article names carry real en dashes ("Hindu-Arabic numeral system");
+        # wiki.py stores them raw, so normalise here where they enter the page
         "points": sorted([{"a": NOW - v["y"], "w": v["peryear"], "d": v["d"],
-                           "t": v["t"][:46], "art": v["art"][:40]} for v in ok],
+                           "t": dash(v["t"][:46]), "art": dash(v["art"][:40])}
+                          for v in ok],
                          key=lambda x: -x["w"]),
     }
 
