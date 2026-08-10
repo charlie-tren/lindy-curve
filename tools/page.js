@@ -124,52 +124,59 @@ if (svgHero && document.getElementById("tip6")) {
   svgHero.addEventListener("pointerleave", function () { tipHero.hide(); });
 }
 
-/* --------------------------------------------------- shelf: medians, not maxima */
+/* ------------------------- shelf: how many books this old are still read that much */
 const svgShelf = document.getElementById("shelf");
 const tipShelf = tipper("tip3", svgShelf);
 const SH = {W: 960, H: 260};
+let thresh = "1000";
 function shelf(st) {
   clear(svgShelf);
   tipShelf.reset();
   const W = SH.W, H = SH.H, L = 54, R = 12, T = 18, B = 32;
   const bars = st.shelf.bars;
   if (!bars.length) return;
-  const top = Math.log10(Math.max.apply(null, bars.map(b => b.p75)) * 1.15);
-  const bot = Math.log10(Math.min.apply(null, bars.map(b => b.med)) * 0.7);
+  /* A COUNT, not an average. Every bucket holds the same number of books, so "how many
+     of these 3,374 are still read more than 1,000 times a month" is comparable across
+     the age axis - which a median hid and a maximum actively misrepresented. */
+  const counts = bars.map(function (b) { return b.cnt[thresh] || 0; });
+  const top = Math.max(4, Math.max.apply(null, counts) * 1.18);
   const bw = (W - L - R) / st.shelf.buckets;
-  const yv = v => H - B - (Math.log10(v) - bot) / (top - bot) * (H - T - B);
-  [300, 500, 1000, 2000, 5000].forEach(function (v) {
-    const lv = Math.log10(v);
-    if (lv < bot || lv > top) return;
-    svgShelf.appendChild(el("line", {class: "g", x1: L, y1: yv(v).toFixed(1),
-      x2: W - R, y2: yv(v).toFixed(1)}));
-    svgShelf.appendChild(txt(yLab(v), {class: "ax", x: L - 8, y: (yv(v) + 4).toFixed(1),
+  const yv = v => H - B - v / top * (H - T - B);
+  const step = top > 400 ? 100 : top > 150 ? 50 : top > 60 ? 20 : 5;
+  for (let g = 0; g <= top; g += step) {
+    svgShelf.appendChild(el("line", {class: "g", x1: L, y1: yv(g).toFixed(1),
+      x2: W - R, y2: yv(g).toFixed(1)}));
+    svgShelf.appendChild(txt(fmt(g), {class: "ax", x: L - 8, y: (yv(g) + 4).toFixed(1),
       "text-anchor": "end"}));
-  });
-  bars.forEach(function (b) {
+  }
+  bars.forEach(function (b, i) {
     // k rises WITH age, so k=0 (newest) sits at the LEFT, matching the curve above.
     const x = L + b.k * bw;
-    const yTop = yv(b.med);
+    const c = counts[i];
+    const yTop = yv(c);
     svgShelf.appendChild(el("rect", {x: (x + bw * 0.14).toFixed(1), y: yTop.toFixed(1),
-      width: (bw * 0.72).toFixed(1), height: Math.max(1, H - B - yTop).toFixed(1),
+      width: (bw * 0.72).toFixed(1), height: Math.max(0.5, H - B - yTop).toFixed(1),
       fill: "var(--c" + band(b.y) + ")", "data-year": b.y}));
-    // a hairline at the 75th percentile, so the bar is not mistaken for the whole story
-    svgShelf.appendChild(el("line", {class: "p75", x1: (x + bw * 0.14).toFixed(1),
-      y1: yv(b.p75).toFixed(1), x2: (x + bw * 0.86).toFixed(1),
-      y2: yv(b.p75).toFixed(1)}));
     const t = D.titles[b.i] || ["?", ""];
     tipShelf.add(x + bw / 2, yTop,
       fmt(b.lo) + " to " + fmt(b.hi) + " years old",
-      "median " + fmt(b.med) + " readers a month" + DOT + "upper quartile "
-      + fmt(b.p75) + DOT + fmt(b.n) + " books" + DOT + "best known: " + t[0]);
+      fmt(c) + " of " + fmt(b.n) + " books read more than " + fmt(+thresh)
+      + " times a month" + DOT + "that is " + (c / b.n * 100).toFixed(1) + "%"
+      + DOT + "best known: " + t[0]);
   });
   svgShelf.appendChild(el("line", {class: "g", x1: L, y1: H - B + 4, x2: W - R,
     y2: H - B + 4}));
   svgShelf.appendChild(txt("NEWEST", {class: "axl", x: L + 2, y: H - 10}));
-  svgShelf.appendChild(txt("MEDIAN READERS A MONTH, EQUAL-SIZED AGE GROUPS",
-    {class: "axl", x: W / 2, y: H - 10, "text-anchor": "middle"}));
+  svgShelf.appendChild(txt("BOOKS PER AGE GROUP OF " + fmt(bars[0].n)
+    + " STILL READ THAT OFTEN", {class: "axl", x: W / 2, y: H - 10,
+    "text-anchor": "middle"}));
   svgShelf.appendChild(txt("OLDEST", {class: "axl", x: W - R - 2, y: H - 10,
     "text-anchor": "end"}));
+  const sc = document.getElementById("shcount");
+  if (sc) {
+    const tot = counts.reduce(function (a, b2) { return a + b2; }, 0);
+    sc.textContent = fmt(tot) + " books in total clear that bar";
+  }
 }
 svgShelf.addEventListener("pointermove", function (ev) {
   tipShelf.track(userPos(svgShelf, ev, SH.W, SH.H), SH.W, SH.H, 12, true);
@@ -534,6 +541,12 @@ function draw() {
 draw();
 
 /* the dropdown filters above the dot plot */
+(function () {
+  const sel = document.getElementById("f-thresh");
+  if (!sel) return;
+  thresh = sel.value;
+  sel.addEventListener("change", function () { thresh = sel.value; shelf(state()); });
+})();
 [["f-era", function (v) { era = v; }],
  ["f-subj", function (v) { subj = v; }],
  ["f-lang", function (v) { lang = v; }],

@@ -42,6 +42,9 @@ NOW = 2026
 # cross-checked against Wikipedia pageviews, which have no floor at all.
 FLOORS = [0]
 
+# Readership bars the second chart counts books above.
+THRESHOLDS = [600, 1000, 2000, 5000, 10000]
+
 # Works worth naming on the charts: recognisable, and spread across the age axis.
 CALLOUTS = ["Moby Dick", "Pride and Prejudice", "Romeo and Juliet", "The Odyssey",
             "Meditations", "The Iliad", "Frankenstein", "The Republic",
@@ -158,13 +161,16 @@ def intern_title(t, au):
 
 
 def shelf(rows, buckets=20):
-    """Median readership per EQUAL-COUNT age bucket.
+    """HOW MANY books in each age group are still read above a threshold.
 
-    This used to plot the single most-read work in each slot of log age, which was a
-    maximum rather than an average: every bar was set by one outlier, so the chart drew
-    the canon instead of the corpus and said nothing about whether age predicts
-    readership. It also made the ancient end look mighty, because the only ancient works
-    Gutenberg holds are famous ones.
+    Two earlier versions of this chart were wrong. The first plotted the single
+    most-downloaded work per slot - a maximum, so one outlier set every bar and the chart
+    drew the canon rather than the corpus. The second plotted the median, which was honest
+    but nearly flat and therefore said very little.
+
+    A COUNT above a readership bar is the statistic that actually matches the question:
+    of the books this old, how many are still genuinely being read? That is a survival
+    rate, which is what the Lindy effect is about.
 
     Equal-count buckets rather than equal-width ones, because ages are wildly skewed -
     fixed decades would give 3,000 works to the 1800s and one to the 1300s, and the thin
@@ -183,6 +189,10 @@ def shelf(rows, buckets=20):
         top = max(chunk, key=lambda r: r["d"])
         out.append({
             "k": i,
+            # how many books in this age group clear each readership bar. Because every
+            # bucket holds the same number of books, these counts are directly
+            # comparable - which is the whole reason for equal-count buckets.
+            "cnt": {str(t): sum(1 for d in dls if d >= t) for t in THRESHOLDS},
             "med": round(statistics.median(dls)),
             "p75": dls[int(len(dls) * .75)],
             "n": len(chunk),
@@ -192,7 +202,7 @@ def shelf(rows, buckets=20):
             "i": intern_title(top["t"][:95], top["au"].split(",")[0][:30]),
             "topd": top["d"],
         })
-    return {"buckets": buckets, "bars": out}
+    return {"buckets": buckets, "bars": out, "thresholds": THRESHOLDS}
 
 
 def callouts(rows):

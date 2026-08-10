@@ -239,14 +239,24 @@ def main():
                 sh = pg.evaluate("""() => {
                     const r = [...document.querySelectorAll('#shelf rect')];
                     return {n: r.length,
-                            p75: document.querySelectorAll('#shelf line.p75').length};
+                            p75: 0};
                 }""")
                 check(sh["n"] >= 15 and sh["n"] <= 22,
                       f"{tag}: {sh['n']} shelf bars, expected one per age bucket (~20)")
-                check(sh["p75"] == sh["n"],
-                      f"{tag}: {sh['p75']} upper-quartile marks for {sh['n']} bars")
-                check("MEDIAN READERS" in pg.inner_text("#v-curve"),
-                      f"{tag}: the shelf does not say it is showing medians")
+                check("STILL READ THAT OFTEN" in pg.inner_text("#v-curve"),
+                      f"{tag}: the shelf does not say what it is counting")
+                # changing the readership bar must change the bar heights, not just a label
+                if w >= 1280:
+                    h0 = pg.evaluate("""() => [...document.querySelectorAll('#shelf rect')]
+                        .map(r => +r.getAttribute('height')).join(',')""")
+                    pg.select_option("#f-thresh", "10000")
+                    pg.wait_for_timeout(250)
+                    h1 = pg.evaluate("""() => [...document.querySelectorAll('#shelf rect')]
+                        .map(r => +r.getAttribute('height')).join(',')""")
+                    check(h0 != h1,
+                          f"{tag}: raising the readership bar did not change the counts")
+                    pg.select_option("#f-thresh", "1000")
+                    pg.wait_for_timeout(200)
 
 
                 check(pg.locator("footer a.back .arw").count() == 1,
