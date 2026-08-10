@@ -65,8 +65,7 @@ p{margin:0;max-width:66ch}
 .sub{font-size:.93rem;color:var(--dim)}
 .k{font:400 .78rem/1.5 var(--mono);letter-spacing:.04em;color:var(--dim)}
 
-.view{margin-top:2.4rem;display:none;flex-direction:column;gap:1.15rem}
-.view.on{display:flex}
+.view{margin-top:2.4rem;display:flex;flex-direction:column;gap:1.15rem}
 figure{margin:0;overflow-x:auto}
 figure svg{width:100%;height:auto;display:block;min-width:540px}
 .card{background:var(--panel);border:1px solid var(--rule);padding:1.15rem;
@@ -76,31 +75,6 @@ figure svg{width:100%;height:auto;display:block;min-width:540px}
        color:var(--faint);align-self:flex-start;border:1px solid var(--faint);
        padding:3px 6px 2px}
 
-/* ------------------------------------------------- the control, and the readout */
-.ctl{background:var(--panel);border:1px solid var(--rule);padding:1.15rem;
-     display:grid;gap:1.15rem;grid-template-columns:minmax(0,1fr) minmax(210px,auto);
-     align-items:start}
-.ctl label{display:flex;flex-direction:column;gap:.5rem}
-.ctl .lab{font:700 9.5px/1.5 var(--disp);letter-spacing:.15em;text-transform:uppercase;
-          color:var(--gilt)}
-input[type=range]{width:100%;-webkit-appearance:none;appearance:none;
-  background:transparent;height:22px;cursor:pointer}
-input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--rule);
-  border-radius:2px}
-input[type=range]::-moz-range-track{height:4px;background:var(--rule);border-radius:2px}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
-  width:16px;height:16px;margin-top:-6px;border-radius:50%;background:var(--ox);
-  border:2px solid var(--ground)}
-input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
-  background:var(--ox);border:2px solid var(--ground)}
-.ticks{display:flex;justify-content:space-between;font:400 9px/1 var(--mono);
-       color:var(--faint)}
-.out{display:flex;flex-direction:column;gap:.15rem;text-align:right}
-.rho{font:400 clamp(30px,6vw,42px)/1 var(--body);letter-spacing:-.01em;
-     font-variant-numeric:tabular-nums}
-.rho.pos{color:var(--c1)} .rho.neg{color:var(--ox)} .rho.nil{color:var(--dim)}
-.verdict{font:700 9.5px/1.4 var(--disp);letter-spacing:.14em;text-transform:uppercase}
-.nread{font:400 .8rem/1.5 var(--mono);color:var(--dim)}
 
 table{border-collapse:collapse;width:100%;font-size:.9rem}
 th,td{text-align:right;padding:.34rem .5rem;border-bottom:1px solid var(--rule)}
@@ -175,10 +149,6 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
   <span class="wm">The Lindy Curve</span>
   <button class="tog" id="tog" type="button" aria-label="Switch to the dark theme">
     <span class="dot"></span><span id="togl">Dark</span></button>
-  <nav role="tablist" aria-label="Views">
-    <button role="tab" id="t-curve" aria-selected="true" aria-controls="v-curve">The curve</button>
-    <button role="tab" id="t-scatter" aria-selected="false" aria-controls="v-scatter">Scatter</button>
-  </nav>
 </header>
 
 <p class="lede">Old things are supposed to endure: what has lasted a century is a fair
@@ -186,41 +156,13 @@ bet to last another. Books make that testable, because Project Gutenberg publish
 often each of its texts was read this month. Here are %%WORKS%% of them, by age.</p>
 
 <!-- ============================================================ the curve -->
-<section class="view on" id="v-curve" role="tabpanel" aria-labelledby="t-curve">
+<section class="view" id="v-curve">
 
   <figure>%%HERO%%</figure>
 
   <figure class="shelfwrap"><svg id="shelf" viewBox="0 0 960 260" role="img"
     aria-label="One bar per age step, height is readership"></svg>
     <div class="tip" id="tip3"></div></figure>
-
-  <div class="card">
-    <h3>The same works as a shelf</h3>
-    <p class="sub">One bar per step of age, tallest first-known work in each, oldest on the
-    right. Colour is the century. If age drove readership the skyline would slope; it does
-    not, and the gap in the middle is a real hollow in Gutenberg's medieval holdings rather
-    than a missing bar.</p>
-  </div>
-
-  <div class="ctl">
-    <label for="floor">
-      <span class="lab" id="flab">Counting every work in the corpus</span>
-      <input type="range" id="floor" min="0" max="%%MAXI%%" value="0" step="1"
-             aria-describedby="fh">
-      <span class="ticks" id="ticks"></span>
-      <span class="sub" id="fh">Gutenberg's counts have a floor: %%BASELINE%%% of the whole
-      corpus sits between 300 and 600 downloads a month, far too uniformly across
-      %%UNDER600%% mostly obscure works to be human readership, and Gutenberg does not
-      document what it is. Raise the threshold through it and watch the relationship
-      change sign.</span>
-    </label>
-    <div class="out">
-      <span class="k">Age vs downloads, Spearman</span>
-      <span class="rho" id="rho">+0.110</span>
-      <span class="verdict" id="verdict"></span>
-      <span class="nread" id="nread"></span>
-    </div>
-  </div>
 
   <figure id="medwrap"><svg id="medchart" viewBox="0 0 960 340" role="img"
     aria-label="Median downloads per surviving work, by century"></svg>
@@ -252,16 +194,39 @@ often each of its texts was read this month. Here are %%WORKS%% of them, by age.
 </section>
 
 <!-- =========================================================== the scatter -->
-<section class="view" id="v-scatter" role="tabpanel" aria-labelledby="t-scatter">
+<section class="view" id="v-scatter">
   <figure id="scatwrap"><svg id="scatter" viewBox="0 0 960 470" role="img"
     aria-label="Every work by age against downloads, log scales"></svg>
     <div class="tip" id="tip"></div></figure>
   <p class="zoomhint">Scroll to zoom, drag to pan, hover a point for the title,
   double-click to reset.</p>
   <div class="card">
-    <h3>One dot per work</h3>
-    <p class="sub">Both axes are logarithmic. There is no slope at any threshold.</p>
+    <h3>Every work, one dot</h3>
+    <p class="sub">Age across, readers up, both on log scales. Scroll to zoom, drag to
+    pan, hover for a title. The oldest works sit at the right of the cloud rather than
+    above or below it, which is the whole finding in one picture.</p>
     <p class="k" id="scatnote"></p>
+  </div>
+</section>
+
+<section class="view" id="v-wiki">
+  <h2>A second opinion</h2>
+  <p class="sub">Gutenberg's count has a floor - %%BASELINE%%% of the corpus sits between
+  300 and 600 a month, too uniform to be readers - so the finding needs a measure that does
+  not share the flaw. Wikipedia pageviews have no floor and run monthly back to 2016, which
+  also gives the multi-year average Gutenberg cannot.</p>
+  <figure id="wikiwrap"><svg id="wiki" viewBox="0 0 960 420" role="img"
+    aria-label="Wikipedia pageviews a year against age, for well-known works"></svg>
+    <div class="tip" id="tip5"></div></figure>
+  <div class="card">
+    <h3>It agrees</h3>
+    <p class="sub">Across <b id="wn"></b> well-known works matched to a Wikipedia article,
+    the correlation between age and pageviews is <b id="wrho"></b> - the same nothing the
+    download count shows for the same books (<b id="wgut"></b>). Works over three hundred
+    years old average <b id="wold"></b> views a year; newer ones, <b id="wnew"></b>.</p>
+    <p class="sub">It measures a different thing - people looking up the work, not reading
+    it - and the two only correlate at <b id="wagree"></b> with each other, which is worth
+    knowing on its own. But on the question this page asks they say the same thing.</p>
   </div>
 </section>
 

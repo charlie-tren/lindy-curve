@@ -71,18 +71,6 @@ function userPos(svg, ev, W, H) {
   return {x: (ev.clientX - r.left) / r.width * W, y: (ev.clientY - r.top) / r.height * H};
 }
 
-/* -------------------------------------------------------------------- tabs */
-const tabs = [["t-curve", "v-curve"], ["t-scatter", "v-scatter"]];
-tabs.forEach(function (pair) {
-  document.getElementById(pair[0]).addEventListener("click", function () {
-    tabs.forEach(function (p2) {
-      const on = p2[0] === pair[0];
-      document.getElementById(p2[0]).setAttribute("aria-selected", on ? "true" : "false");
-      document.getElementById(p2[1]).classList.toggle("on", on);
-    });
-    draw();
-  });
-});
 
 /* ------------------------------------------------------------------- shelf */
 const svgShelf = document.getElementById("shelf");
@@ -225,6 +213,32 @@ function scatterSoon() {
   scQueued = true;
   requestAnimationFrame(function () { scQueued = false; scatter(); });
 }
+let ptsG = null;
+function buildCloud() {
+  /* The cloud is built ONCE and its circles are then repositioned on pan and zoom.
+     Recreating 4,800 SVG nodes every frame is what made dragging feel sticky; setting
+     two attributes on existing nodes is far cheaper. A group transform would be cheaper
+     still, but log-log zoom needs a non-uniform scale, which turns the dots into
+     ellipses - so this is the fast option that stays correct. */
+  ptsG = el("g", {id: "cloud"});
+  D.scatter.points.forEach(function () {
+    ptsG.appendChild(el("circle", {class: "pt sp", cx: -99, cy: -99, r: 2.9,
+      opacity: 0.5}));
+  });
+}
+function placeCloud() {
+  const kids = ptsG.childNodes, pts = D.scatter.points;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i], c = kids[i];
+    const lx = Math.log10(p.a), ly = Math.log10(p.d);
+    if (lx < view.x0 || lx > view.x1 || ly < view.y0 || ly > view.y1) {
+      if (c.getAttribute("cx") !== "-99") c.setAttribute("cx", -99);
+      continue;
+    }
+    c.setAttribute("cx", spx(lx).toFixed(1));
+    c.setAttribute("cy", spy(ly).toFixed(1));
+  }
+}
 function scatter() {
   clear(svgScatter);
   tipScatter.reset();
@@ -243,39 +257,44 @@ function scatter() {
       "text-anchor": "end"}));
   });
 
-  const floor = state().floor;
+  if (!ptsG) buildCloud();
+  placeCloud();
+  svgScatter.appendChild(ptsG);
+
   let shown = 0;
+  const inView = [];
   D.scatter.points.forEach(function (p) {
     const lx = Math.log10(p.a), ly = Math.log10(p.d);
     if (lx < view.x0 || lx > view.x1 || ly < view.y0 || ly > view.y1) return;
-    const on = p.d >= floor;
-    if (on) shown++;
+    shown++;
     const X = spx(lx), Y = spy(ly);
-    // ONE radius for every dot. Two radii read as a distinction in the data that does
-    // not exist - above and below the threshold differ in opacity only.
-    svgScatter.appendChild(el("circle", {class: "pt sp" + (on ? "" : " lo"),
-      cx: X.toFixed(1), cy: Y.toFixed(1), r: 2.9, opacity: on ? 0.55 : 0.16}));
+    inView.push({X: X, Y: Y, p: p});
     tipScatter.add(X, Y, p.t || "?",
       (p.au ? p.au + DOT : "") + fmt(p.a) + " yrs old" + DOT + fmt(p.d)
       + " readers a month");
   });
-  D.callouts.forEach(function (c) {
-    const lx = Math.log10(c.a), ly = Math.log10(c.d);
-    if (lx < view.x0 || lx > view.x1 || ly < view.y0 || ly > view.y1) return;
-    const X = spx(lx), Y = spy(ly);
-    svgScatter.appendChild(el("circle", {class: "hi", cx: X.toFixed(1), cy: Y.toFixed(1),
-      r: 4}));
-    svgScatter.appendChild(txt(c.n, {class: "lbl", x: (X + 7).toFixed(1),
-      y: (Y + 3.5).toFixed(1)}));
-    tipScatter.add(X, Y, c.t, (c.au ? c.au + DOT : "") + fmt(c.a) + " yrs old" + DOT
-      + fmt(c.d) + " readers a month");
-  });
+  /* Label the most-read works CURRENTLY IN VIEW rather than a fixed list of twenty -
+     which is why only some books had names before. Zooming in now names more of them,
+     and labels are skipped when they would collide with one already placed. */
+  const placed = [];
+  inView.sort(function (a, b) { return b.p.d - a.p.d; });
+  for (const q of inView) {
+    if (placed.length >= 26) break;
+    if (placed.some(function (o) {
+      return Math.abs(o.X - q.X) < 128 && Math.abs(o.Y - q.Y) < 13;
+    })) continue;
+    placed.push(q);
+    svgScatter.appendChild(el("circle", {class: "hi", cx: q.X.toFixed(1),
+      cy: q.Y.toFixed(1), r: 3.6}));
+    svgScatter.appendChild(txt(q.p.t.replace(/[;:].*$/, "").slice(0, 34),
+      {class: "lbl", x: (q.X + 7).toFixed(1), y: (q.Y + 3.5).toFixed(1)}));
+  }
   svgScatter.appendChild(txt("AGE IN YEARS", {class: "axl", x: SC.L, y: SC.H - 6}));
   svgScatter.appendChild(txt("READERS A MONTH", {class: "axl", x: SC.L, y: SC.T - 8}));
   const z = (HOME.x1 - HOME.x0) / (view.x1 - view.x0);
   document.getElementById("scatnote").textContent =
     "Every " + D.scatter.meta.stride + "th work, " + fmt(D.scatter.meta.kept) + " of "
-    + fmt(D.scatter.meta.of) + DOT + fmt(shown) + " above the threshold"
+    + fmt(D.scatter.meta.of) + DOT + fmt(shown) + " in view"
     + (z > 1.05 ? DOT + "zoomed " + z.toFixed(1) + "x" : "") + ".";
 }
 
@@ -328,8 +347,81 @@ svgScatter.addEventListener("dblclick", function () {
 });
 
 /* ------------------------------------------------------------------- state */
-const slider = document.getElementById("floor");
-function state() { return D.states[Math.min(slider.value, D.states.length - 1)]; }
+const ST = D.states[0];
+function state() { return ST; }
+
+
+draw();
+
+/* --------------------------------- the second opinion: Wikipedia pageviews */
+const svgWiki = document.getElementById("wiki");
+const tipWiki = svgWiki ? tipper("tip5", svgWiki) : null;
+const WK = {W: 960, H: 420, L: 66, R: 26, T: 30, B: 52};
+function wiki() {
+  const w = D.wiki;
+  if (!w || !svgWiki) return;
+  clear(svgWiki);
+  tipWiki.reset();
+  const pts = w.points;
+  const x0 = Math.log10(60), x1 = Math.log10(3200);
+  const y0 = Math.log10(Math.max(200, Math.min.apply(null, pts.map(p => p.w)) * 0.7));
+  const y1 = Math.log10(Math.max.apply(null, pts.map(p => p.w)) * 1.4);
+  const px = v => WK.L + (v - x0) / (x1 - x0) * (WK.W - WK.L - WK.R);
+  const py = v => WK.H - WK.B - (v - y0) / (y1 - y0) * (WK.H - WK.T - WK.B);
+  [100, 200, 500, 1000, 2000].forEach(function (v) {
+    const l = Math.log10(v);
+    if (l < x0 || l > x1) return;
+    svgWiki.appendChild(el("line", {class: "g", x1: px(l), y1: WK.T, x2: px(l),
+      y2: WK.H - WK.B}));
+    svgWiki.appendChild(txt(fmt(v), {class: "ax", x: px(l), y: WK.H - WK.B + 18,
+      "text-anchor": "middle"}));
+  });
+  [1000, 10000, 100000, 1000000].forEach(function (v) {
+    const l = Math.log10(v);
+    if (l < y0 || l > y1) return;
+    svgWiki.appendChild(el("line", {class: "g", x1: WK.L, y1: py(l), x2: WK.W - WK.R,
+      y2: py(l)}));
+    svgWiki.appendChild(txt(v >= 1000000 ? (v / 1000000) + "M" : yLab(v),
+      {class: "ax", x: WK.L - 8, y: py(l) + 4, "text-anchor": "end"}));
+  });
+  const placed = [];
+  pts.forEach(function (p) {
+    const lx = Math.log10(p.a), ly = Math.log10(p.w);
+    if (lx < x0 || lx > x1 || ly < y0 || ly > y1) return;
+    const X = px(lx), Y = py(ly);
+    svgWiki.appendChild(el("circle", {class: "pt", cx: X.toFixed(1), cy: Y.toFixed(1),
+      r: 3.4, opacity: 0.6}));
+    tipWiki.add(X, Y, p.t, fmt(p.a) + " yrs old" + DOT + fmt(p.w)
+      + " Wikipedia views a year" + DOT + fmt(p.d) + " Gutenberg readers a month");
+    if (placed.length < 14 && !placed.some(function (o) {
+      return Math.abs(o.X - X) < 130 && Math.abs(o.Y - Y) < 13;
+    })) {
+      placed.push({X: X, Y: Y});
+      svgWiki.appendChild(txt(p.t.replace(/[;:].*$/, "").slice(0, 30),
+        {class: "lbl", x: (X + 7).toFixed(1), y: (Y + 3.5).toFixed(1)}));
+    }
+  });
+  svgWiki.appendChild(txt("AGE IN YEARS", {class: "axl", x: WK.L, y: WK.H - 6}));
+  svgWiki.appendChild(txt("WIKIPEDIA VIEWS A YEAR, 2016 TO 2026",
+    {class: "axl", x: WK.L, y: WK.T - 10}));
+  const set = function (id, v) {
+    const n = document.getElementById(id);
+    if (n) n.textContent = v;
+  };
+  set("wn", fmt(w.n));
+  set("wrho", (w.rho_wiki >= 0 ? "+" : "−") + Math.abs(w.rho_wiki).toFixed(3));
+  set("wgut", (w.rho_gut >= 0 ? "+" : "−") + Math.abs(w.rho_gut).toFixed(3));
+  set("wold", fmt(w.med_old));
+  set("wnew", fmt(w.med_new));
+  set("wagree", (w.rho_agree >= 0 ? "+" : "−") + Math.abs(w.rho_agree).toFixed(3));
+}
+if (svgWiki) {
+  svgWiki.addEventListener("pointermove", function (ev) {
+    tipWiki.track(userPos(svgWiki, ev, WK.W, WK.H), WK.W, WK.H, 14);
+  });
+  svgWiki.addEventListener("pointerleave", function () { tipWiki.hide(); });
+}
+wiki();
 
 function draw() {
   const st = state();
@@ -337,37 +429,4 @@ function draw() {
   median(st);
   scatter();
 }
-
-function readout() {
-  const st = state(), r = st.rho;
-  const box = document.getElementById("rho");
-  box.textContent = (r >= 0 ? "+" : "−") + Math.abs(r).toFixed(3);
-  box.className = "rho " + (Math.abs(r) < 0.03 ? "nil" : r > 0 ? "pos" : "neg");
-  document.getElementById("verdict").textContent =
-    Math.abs(r) < 0.03 ? "no relationship at all"
-      : r > 0 ? "older works read slightly more" : "older works read slightly less";
-  document.getElementById("flab").textContent = st.floor === 0
-    ? "Counting every work in the corpus"
-    : "Ignoring works read fewer than " + fmt(st.floor) + " times a month";
-  document.getElementById("nread").textContent =
-    fmt(st.n) + " works" + DOT + "median " + fmt(st.med) + " a month";
-}
-
-const tk = document.getElementById("ticks");
-[D.states[0], D.states[Math.floor(D.states.length / 2)], D.states[D.states.length - 1]]
-  .forEach(function (s2) {
-    const b = document.createElement("span");
-    b.textContent = fmt(s2.floor);
-    tk.appendChild(b);
-  });
-slider.max = String(D.states.length - 1);
-// Redraw on the next frame, so dragging the slider fast does not queue 25 full redraws.
-let queued = false;
-slider.addEventListener("input", function () {
-  readout();
-  if (queued) return;
-  queued = true;
-  requestAnimationFrame(function () { queued = false; draw(); });
-});
-readout();
 draw();

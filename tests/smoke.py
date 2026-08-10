@@ -143,24 +143,31 @@ def main():
                       f"{tag}: {pg.locator('.method').count()} methodology blocks, expected 1")
                 check(pg.locator("#v-curve .method").count() == 1,
                       f"{tag}: the methodology is not inside the curve view")
-                check(pg.locator('[role="tab"]').count() == 2,
-                      f"{tag}: {pg.locator('[role=tab]').count()} tabs, expected 2")
+                check(pg.locator('[role="tab"]').count() == 0,
+                      f"{tag}: tabs still present - the page is meant to be one page")
+                check(pg.locator("#floor").count() == 0,
+                      f"{tag}: the threshold slider is still present")
+                wk = pg.evaluate("document.querySelectorAll('#wiki circle.pt').length")
+                check(wk > 80, f"{tag}: Wikipedia chart has {wk} points, expected 100+")
+                check(pg.inner_text("#wrho").startswith("+"),
+                      f"{tag}: the Wikipedia correlation did not render")
 
                 # every view draws something
                 counts = pg.evaluate("""() => ({
                     med: document.querySelectorAll('#medchart .medpt').length,
                     medpath: document.querySelectorAll('#medchart path.med').length,
                     pts: document.querySelectorAll('#scatter circle.pt').length,
-                    hi: document.querySelectorAll('#scatter circle.hi').length,
                     bars: document.querySelectorAll('#shelf rect').length,
                     band: document.querySelectorAll('#medchart path').length,
+                    labels: document.querySelectorAll('#scatter text.lbl').length,
 
                 })""")
                 check(counts["medpath"] == 1, f"{tag}: median line missing")
                 check(counts["med"] >= 20,
                       f"{tag}: only {counts['med']} century points")
                 check(counts["pts"] > 4000, f"{tag}: only {counts['pts']} scatter points")
-                check(counts["hi"] >= 5, f"{tag}: only {counts['hi']} named works plotted")
+                check(counts["labels"] >= 12,
+                      f"{tag}: only {counts['labels']} works labelled on the scatter")
                 check(counts["bars"] >= 40, f"{tag}: only {counts['bars']} shelf bars")
                 check(pg.locator("#shelf text.ax").count() >= 2,
                       f"{tag}: the shelf has no y-axis labels")
@@ -169,56 +176,22 @@ def main():
                       "band and a median line")
 
 
-                # the slider must actually change the finding, not just the label
-                before = pg.evaluate("""() => ({
-                    rho: document.getElementById('rho').textContent,
-                    n: document.getElementById('nread').textContent,
-                    bars: document.querySelectorAll('#shelf rect').length,
-                })""")
-                pg.eval_on_selector("#floor", """el => {
-                    el.value = String(Math.min(5, +el.max));
-                    el.dispatchEvent(new Event('input', {bubbles: true}));
-                }""")
-                pg.wait_for_timeout(250)
-                after = pg.evaluate("""() => ({
-                    rho: document.getElementById('rho').textContent,
-                    n: document.getElementById('nread').textContent,
-                    bars: document.querySelectorAll('#shelf rect').length,
-                })""")
-                check(before["rho"] != after["rho"],
-                      f"{tag}: rho unchanged by the slider ({before['rho']})")
-                check(before["n"] != after["n"], f"{tag}: work count unchanged by slider")
-                # and the sign really does flip somewhere, which is the whole point
-                signs = {("+" if s["rho"] >= 0 else "-") for s in derived["states"]}
-                check(len(signs) == 2,
-                      f"{tag}: rho never changes sign across thresholds - "
-                      "the page's central claim would be wrong")
-
-                # tabs
-                for tab, view in [("t-scatter", "v-scatter"), ("t-curve", "v-curve")]:
-                    pg.click(f"#{tab}")
-                    pg.wait_for_timeout(120)
-                    on = pg.evaluate(f"document.getElementById('{view}')"
-                                     ".classList.contains('on')")
-                    check(on, f"{tag}: clicking #{tab} did not open #{view}")
-
                 check(pg.locator("footer a.back .arw").count() == 1,
                       f"{tag}: the Other projects link has no arrow")
 
-                # THE REGRESSION THAT MATTERS: Charlie chose the cream design, and an OS
-                # set to dark meant he never saw it. Cream must be the default in BOTH
-                # browser preferences; dark is opt-in via the toggle only.
                 theme = pg.evaluate("document.documentElement.getAttribute('data-theme')")
                 check(theme == "light",
-                      f"{tag}: default theme is '{theme}', must be light (cream) "
-                      "regardless of the browser preference")
+                      f"{tag}: default theme is '{theme}', must be light regardless of "
+                      "the browser preference")
                 check(pg.locator("#tog").count() == 1, f"{tag}: no theme toggle")
                 pg.click("#tog")
-                pg.wait_for_timeout(150)
+                pg.wait_for_timeout(180)
                 check(pg.evaluate("document.documentElement.getAttribute('data-theme')")
                       == "dark", f"{tag}: the toggle did not switch to dark")
                 pg.click("#tog")
-                pg.wait_for_timeout(150)
+                pg.wait_for_timeout(180)
+                check(pg.evaluate("document.documentElement.getAttribute('data-theme')")
+                      == "light", f"{tag}: the toggle did not switch back to light")
 
                 # one dot size only - two radii read as a distinction in the data
                 radii = pg.evaluate("""() => [...new Set([...document.querySelectorAll(
@@ -254,7 +227,7 @@ def main():
                 }""")
                 check(col[0] != col[1], f"{tag}: text and background are the same colour")
                 print(f"{tag:<12} pts={counts['pts']:<5} bars={counts['bars']:<3} "
-                      f"centuries={counts['med']:<3} rho {before['rho']} -> {after['rho']}"
+                      f"centuries={counts['med']:<3} labels={counts['labels']:<3}"
                       f"   {col[0]} on {col[1]}")
                 ctx.close()
             b.close()

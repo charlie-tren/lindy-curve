@@ -37,10 +37,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 NOW = 2026
 
-# The floors the slider steps through. Dense where the signal changes fastest.
-FLOORS = ([0, 100, 175, 240, 280] + list(range(300, 620, 20))
-          + list(range(620, 1050, 40)) + [1150, 1300, 1500, 1750, 2000, 2400,
-          2900, 3500, 4200, 5000, 6000, 7500, 9500, 12000, 15000, 20000, 25000])
+# The threshold slider is gone (Charlie's call): every chart is the whole corpus.
+# The baseline floor is still real - it is now disclosed in the methodology and
+# cross-checked against Wikipedia pageviews, which have no floor at all.
+FLOORS = [0]
 
 # Works worth naming on the charts: recognisable, and spread across the age axis.
 CALLOUTS = ["Moby Dick", "Pride and Prejudice", "Romeo and Juliet", "The Odyssey",
@@ -148,7 +148,7 @@ _TIDX = {}
 
 
 def intern_title(t, au):
-    """25 threshold states repeat the same shelf titles, which doubled the payload."""
+    """Shelf titles repeat, so intern them rather than restating each one."""
     key = (t, au)
     if key not in _TIDX:
         _TIDX[key] = len(TITLES)
@@ -188,6 +188,41 @@ def callouts(rows):
                         "au": r["au"].split(",")[0], "t": r["t"], "id": r["id"]})
             break
     return sorted(out, key=lambda o: -o["a"])
+
+
+def wiki_block(rows):
+    """The independent measure: Wikipedia pageviews for works we could match.
+
+    Gutenberg's count has a baseline floor; pageviews do not, and they run monthly back
+    to 2016 so they also give the multi-year average Gutenberg cannot. It counts readers
+    of the ARTICLE ABOUT a work rather than the work, which is why it is a cross-check
+    rather than the main axis.
+    """
+    path = ROOT / "data" / "wiki.json"
+    if not path.exists():
+        return None
+    cache = json.loads(path.read_text(encoding="utf-8"))
+    ok = [v for v in cache.values() if v.get("ok")]
+    if len(ok) < 20:
+        return None
+    age = [NOW - v["y"] for v in ok]
+    return {
+        "n": len(ok),
+        "tried": len(cache),
+        "rho_wiki": round(spearman(age, [v["peryear"] for v in ok]), 4),
+        "rho_gut": round(spearman(age, [v["d"] for v in ok]), 4),
+        "rho_agree": round(spearman([v["d"] for v in ok],
+                                    [v["peryear"] for v in ok]), 4),
+        "med_old": round(statistics.median(
+            [v["peryear"] for v in ok if NOW - v["y"] > 300] or [0])),
+        "n_old": sum(1 for v in ok if NOW - v["y"] > 300),
+        "med_new": round(statistics.median(
+            [v["peryear"] for v in ok if NOW - v["y"] <= 300] or [0])),
+        "n_new": sum(1 for v in ok if NOW - v["y"] <= 300),
+        "points": sorted([{"a": NOW - v["y"], "w": v["peryear"], "d": v["d"],
+                           "t": v["t"][:46], "art": v["art"][:40]} for v in ok],
+                         key=lambda x: -x["w"]),
+    }
 
 
 def main():
@@ -230,6 +265,7 @@ def main():
         },
         "states": states,
         "scatter": {"points": pts, "meta": meta},
+        "wiki": wiki_block(rows),
         "titles": TITLES,
         "callouts": callouts(rows),
         "oldest": [{"t": r["t"][:70], "au": r["au"].split(",")[0], "y": r["y"],
