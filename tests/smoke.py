@@ -166,6 +166,39 @@ def main():
                           f"{tag}: era filter went {before} -> {after}, expected far fewer")
                     pg.click('#filters .chip[data-era="all"]')
                     pg.wait_for_timeout(200)
+                    # language and readership filter the same cloud
+                    for sel, name in [('.chip[data-lang="fr"]', "language"),
+                                      ('.chip[data-min="10000"]', "readership")]:
+                        pg.click(sel)
+                        pg.wait_for_timeout(250)
+                        n = pg.evaluate("""() => [...document.querySelectorAll(
+                            '#scatter circle.pt')].filter(c => c.getAttribute('cx')
+                            !== '-99').length""")
+                        check(0 < n < before / 2,
+                              f"{tag}: the {name} filter left {n} points of {before}")
+                    pg.click('.chip[data-lang="all"]')
+                    pg.click('.chip[data-min="0"]')
+                    pg.wait_for_timeout(200)
+                    # the grid must travel with the cloud during a drag, or the points
+                    # slide off their own axes
+                    bx = pg.locator("#scatter").bounding_box()
+                    pg.mouse.move(bx["x"] + bx["width"] * .5, bx["y"] + bx["height"] * .5)
+                    pg.mouse.down()
+                    pg.mouse.move(bx["x"] + bx["width"] * .35,
+                                  bx["y"] + bx["height"] * .45, steps=6)
+                    pg.wait_for_timeout(120)
+                    tr = pg.evaluate("""() => ({
+                        cloud: (document.getElementById('cloud') || {}).getAttribute
+                               ? document.getElementById('cloud').getAttribute('transform')
+                               : null,
+                        grid: document.getElementById('grid')
+                              ? document.getElementById('grid').getAttribute('transform')
+                              : null})""")
+                    check(tr["grid"] and tr["grid"] == tr["cloud"],
+                          f"{tag}: grid transform {tr['grid']!r} does not match the "
+                          f"cloud {tr['cloud']!r} - gridlines will not move with the data")
+                    pg.mouse.up()
+                    pg.wait_for_timeout(200)
 
                 # every view draws something
                 counts = pg.evaluate("""() => ({

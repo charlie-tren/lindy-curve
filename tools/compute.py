@@ -137,7 +137,7 @@ def scatter(rows, cap=4600):
     ordered = sorted(rows, key=lambda r: r["id"])
     stride = max(1, len(ordered) // cap)
     keep = ordered[::stride]
-    return ([{"a": r["a"], "d": r["d"], "t": r["t"][:52],
+    return ([{"a": r["a"], "d": r["d"], "t": r["t"][:52], "l": r["l"],
               "au": r["au"].split(",")[0][:26]} for r in keep],
             {"kept": len(keep), "of": len(rows), "stride": stride,
              "uniform": True})

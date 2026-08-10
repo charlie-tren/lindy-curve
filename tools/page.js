@@ -263,8 +263,14 @@ function placeCloud() {
     c.setAttribute("cy", spy(ly).toFixed(1));
   }
 }
-let era = "all";
+let era = "all", lang = "all", minRead = 0;
 function inEra(p) {
+  if (p.d < minRead) return false;
+  if (lang !== "all") {
+    if (lang === "other") {
+      if (p.l === "en" || p.l === "fr" || p.l === "fi" || p.l === "de") return false;
+    } else if (p.l !== lang) return false;
+  }
   if (era === "all") return true;
   const y = 2026 - p.a;
   if (era === "anc") return y < 1500;
@@ -272,21 +278,24 @@ function inEra(p) {
   if (era === "c19") return y >= 1800 && y < 1900;
   return y >= 1900;
 }
+let gridG = null;
 function scatter() {
   clear(svgScatter);
   tipScatter.reset();
+  gridG = el("g", {id: "grid"});
+  svgScatter.appendChild(gridG);
   ticks(view.x0, view.x1).forEach(function (v) {
     const X = spx(Math.log10(v));
-    svgScatter.appendChild(el("line", {class: "g", x1: X, y1: SC.T, x2: X,
+    gridG.appendChild(el("line", {class: "g", x1: X, y1: SC.T, x2: X,
       y2: SC.H - SC.B}));
-    svgScatter.appendChild(txt(fmt(v), {class: "ax", x: X, y: SC.H - SC.B + 18,
+    gridG.appendChild(txt(fmt(v), {class: "ax", x: X, y: SC.H - SC.B + 18,
       "text-anchor": "middle"}));
   });
   ticks(view.y0, view.y1).forEach(function (v) {
     const Y = spy(Math.log10(v));
-    svgScatter.appendChild(el("line", {class: "g", x1: SC.L, y1: Y, x2: SC.W - SC.R,
+    gridG.appendChild(el("line", {class: "g", x1: SC.L, y1: Y, x2: SC.W - SC.R,
       y2: Y}));
-    svgScatter.appendChild(txt(yLab(v), {class: "ax", x: SC.L - 7, y: Y + 4,
+    gridG.appendChild(txt(yLab(v), {class: "ax", x: SC.L - 7, y: Y + 4,
       "text-anchor": "end"}));
   });
 
@@ -348,6 +357,7 @@ svgScatter.addEventListener("pointerup", function () {
   dragging = null;
   svgScatter.classList.remove("drag");
   if (ptsG) ptsG.setAttribute("transform", "");
+  if (gridG) gridG.setAttribute("transform", "");
   scatter();
 });
 svgScatter.addEventListener("pointermove", function (ev) {
@@ -362,9 +372,10 @@ svgScatter.addEventListener("pointermove", function (ev) {
     // A pan is a pure translation, so shifting the group is exact AND costs one
     // attribute write instead of repositioning every circle. Axes redraw on the frame;
     // the cloud snaps back to real coordinates when the drag ends.
-    if (ptsG) ptsG.setAttribute("transform",
-      "translate(" + (u.x - dragging.u.x).toFixed(1) + ","
-      + (u.y - dragging.u.y).toFixed(1) + ")");
+    const shift = "translate(" + (u.x - dragging.u.x).toFixed(1) + ","
+      + (u.y - dragging.u.y).toFixed(1) + ")";
+    if (ptsG) ptsG.setAttribute("transform", shift);
+    if (gridG) gridG.setAttribute("transform", shift);
     tipScatter.hide();
     return;
   }
@@ -501,12 +512,15 @@ function draw() {
 draw();
 
 /* the era filter above the dot plot */
-document.querySelectorAll("#filters .chip").forEach(function (btn) {
+document.querySelectorAll(".filters .chip").forEach(function (btn) {
   btn.addEventListener("click", function () {
-    document.querySelectorAll("#filters .chip").forEach(function (b) {
+    const row = btn.parentNode;
+    row.querySelectorAll(".chip").forEach(function (b) {
       b.classList.toggle("on", b === btn);
     });
-    era = btn.getAttribute("data-era");
+    if (btn.hasAttribute("data-era")) era = btn.getAttribute("data-era");
+    if (btn.hasAttribute("data-lang")) lang = btn.getAttribute("data-lang");
+    if (btn.hasAttribute("data-min")) minRead = +btn.getAttribute("data-min");
     scatter();
   });
 });
