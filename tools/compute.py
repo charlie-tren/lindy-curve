@@ -80,7 +80,8 @@ def load():
             if NOW - y <= 0 or d <= 0:
                 continue
             rows.append({"y": y, "d": d, "a": NOW - y, "t": r["title"],
-                         "au": r["author"], "l": r["lang"], "id": int(r["id"])})
+                         "au": r["author"], "l": r["lang"], "id": int(r["id"]),
+                         "s": r.get("subject", "other")})
     return rows
 
 
@@ -137,7 +138,7 @@ def scatter(rows, cap=4600):
     ordered = sorted(rows, key=lambda r: r["id"])
     stride = max(1, len(ordered) // cap)
     keep = ordered[::stride]
-    return ([{"a": r["a"], "d": r["d"], "t": r["t"][:52], "l": r["l"],
+    return ([{"a": r["a"], "d": r["d"], "t": r["t"][:52], "l": r["l"], "s": r["s"],
               "au": r["au"].split(",")[0][:26]} for r in keep],
             {"kept": len(keep), "of": len(rows), "stride": stride,
              "uniform": True})

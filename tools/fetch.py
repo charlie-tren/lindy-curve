@@ -23,6 +23,7 @@ time), which is why `data/history.csv` keeps a weekly snapshot.
 import argparse
 import csv
 import html
+import io
 import re
 import sys
 import tarfile
@@ -32,6 +33,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 CACHE = ROOT / ".cache"
+CATALOG = "https://www.gutenberg.org/cache/epub/feeds/pg_catalog.csv"
 FEED = "https://www.gutenberg.org/cache/epub/feeds/rdf-files.tar.bz2"
 UA = {"User-Agent": "lindy-curve/1.0 (+https://charlietrenorden.com)"}
 
@@ -77,6 +79,37 @@ def date_work(birth, death):
     if death is not None:
         return death
     return birth + 40
+
+
+# Library of Congress class letters, grouped into something a reader recognises.
+# The RDF feed does not carry LoCC, so this comes from the separate catalogue CSV -
+# one extra request, joined on the Gutenberg id.
+LOC_GROUPS = [("P", "lit"), ("B", "phil"), ("Q", "sci"), ("D", "hist"),
+              ("E", "hist"), ("F", "hist"), ("H", "social"), ("J", "social"),
+              ("K", "social"), ("L", "social"), ("T", "sci"), ("R", "sci"),
+              ("S", "sci"), ("G", "hist"), ("M", "arts"), ("N", "arts"),
+              ("A", "ref"), ("C", "hist"), ("U", "hist"), ("V", "hist"),
+              ("Z", "ref")]
+
+
+def subjects():
+    """id -> coarse subject group, from Gutenberg's catalogue CSV."""
+    req = urllib.request.Request(CATALOG, headers=UA)
+    raw = urllib.request.urlopen(req, timeout=180).read().decode("utf-8-sig", "replace")
+    out = {}
+    for row in csv.DictReader(io.StringIO(raw)):
+        code = (row.get("LoCC") or "").strip()
+        if not code:
+            continue
+        letter = code[0].upper()
+        for pre, grp in LOC_GROUPS:
+            if letter == pre:
+                try:
+                    out[int(row["Text#"])] = grp
+                except (ValueError, KeyError):
+                    pass
+                break
+    return out
 
 
 def download(dest):
@@ -164,8 +197,18 @@ def main():
         print(f"Using cached {archive.name} ({archive.stat().st_size / 1e6:.1f}MB) "
               "- pass --refresh to re-download")
 
+    print("Fetching the catalogue for subject classes")
+    try:
+        subj = subjects()
+        print(f"  {len(subj):,} works carry a Library of Congress class")
+    except Exception as exc:                       # noqa: BLE001
+        print(f"  SKIPPED - {type(exc).__name__}: {exc}")
+        subj = {}
+
     print("Parsing")
     rows, skipped = parse(archive)
+    for r in rows:
+        r["subject"] = subj.get(r["id"], "other")
     if not rows:
         sys.exit("No rows parsed - the feed format may have changed.")
 
@@ -174,7 +217,7 @@ def main():
     out = DATA / "corpus.csv"
     with open(out, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["id", "year", "downloads", "title",
-                                          "author", "lang"])
+                                          "author", "lang", "subject"])
         w.writeheader()
         w.writerows(rows)
 

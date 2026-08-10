@@ -291,9 +291,10 @@ function placeCloud() {
     c.setAttribute("cy", spy(ly).toFixed(1));
   }
 }
-let era = "all", lang = "all", minRead = 0;
+let era = "all", lang = "all", minRead = 0, subj = "all";
 function inEra(p) {
   if (p.d < minRead) return false;
+  if (subj !== "all" && p.s !== subj) return false;
   if (lang !== "all") {
     if (lang === "other") {
       if (p.l === "en" || p.l === "fr" || p.l === "fi" || p.l === "de") return false;
@@ -599,6 +600,7 @@ document.querySelectorAll(".filters .chip").forEach(function (btn) {
     if (btn.hasAttribute("data-era")) era = btn.getAttribute("data-era");
     if (btn.hasAttribute("data-lang")) lang = btn.getAttribute("data-lang");
     if (btn.hasAttribute("data-min")) minRead = +btn.getAttribute("data-min");
+    if (btn.hasAttribute("data-subj")) subj = btn.getAttribute("data-subj");
     scatter();
   });
 });
