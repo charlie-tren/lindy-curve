@@ -43,7 +43,7 @@ NOW = 2026
 FLOORS = [0]
 
 # Readership bars the second chart counts books above.
-THRESHOLDS = [200, 600, 1000, 2000, 5000, 10000]
+THRESHOLDS = [0, 200, 600, 1000, 2000, 5000, 10000]
 
 # Works worth naming on the charts: recognisable, and spread across the age axis.
 CALLOUTS = ["Moby Dick", "Pride and Prejudice", "Romeo and Juliet", "The Odyssey",
@@ -125,7 +125,7 @@ def ridge(rows, bins=26, lo=2.3, hi=5.3, min_n=12):
     return {"lo": lo, "hi": hi, "bins": bins, "rows": out}
 
 
-def scatter(rows, cap=4600):
+def scatter(rows, cap=9000):
     """Decimated for the browser on ONE uniform stride, deterministically.
 
     The first version kept every work above 1,500 downloads and only every 94th below
@@ -141,8 +141,8 @@ def scatter(rows, cap=4600):
     ordered = sorted(rows, key=lambda r: r["id"])
     stride = max(1, len(ordered) // cap)
     keep = ordered[::stride]
-    return ([{"a": r["a"], "d": r["d"], "t": r["t"][:52], "l": r["l"], "s": r["s"],
-              "au": r["au"].split(",")[0][:26]} for r in keep],
+    return ([{"a": r["a"], "d": r["d"], "t": r["t"][:44], "l": r["l"], "s": r["s"],
+              "au": r["au"].split(",")[0][:20]} for r in keep],
             {"kept": len(keep), "of": len(rows), "stride": stride,
              "uniform": True})
 
@@ -184,7 +184,10 @@ def shelf(rows, buckets=None):
     out = []
     for c in sorted(per):
         chunk = per[c]
-        if len(chunk) < 5:
+        # The current century is dropped: 26 years of a public-domain catalogue is a
+        # sliver, and scaling 64 books up to a century's worth put a spike on the end
+        # of the chart that was pure extrapolation.
+        if len(chunk) < 5 or c >= (NOW // 100) * 100:
             continue
         top = max(chunk, key=lambda r: r["d"])
         # the current century is only 26 years old, so a raw count understates it by

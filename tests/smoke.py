@@ -146,8 +146,10 @@ def main():
                 # artefact, so publishing it without the caveat would be a false claim
                 check("matched to an article" in pg.inner_text("#v-wiki"),
                       f"{tag}: the Wikipedia match rate is not disclosed on the page")
-                check(pg.inner_text("#wn").strip() and pg.inner_text("#wt").strip(),
-                      f"{tag}: the matched/tried counts did not render")
+                check("slider" not in pg.inner_text(".method"),
+                      f"{tag}: the methodology still mentions the removed slider")
+                check(pg.inner_text("#wnote").strip(),
+                      f"{tag}: the Wikipedia source note did not render")
                 # the summary cards were removed, so the chart itself has to carry it
                 check(pg.locator("#wiki text.lbl").count() == 0,
                       f"{tag}: the Wikipedia chart is labelling works - hover only")
@@ -227,7 +229,7 @@ def main():
                     bars: document.querySelectorAll('#shelf rect').length,
                     labels: document.querySelectorAll('#scatter text.lbl').length,
                 })""")
-                check(counts["pts"] > 4000, f"{tag}: only {counts['pts']} scatter points")
+                check(counts["pts"] > 8000, f"{tag}: only {counts['pts']} scatter points")
                 check(counts["labels"] == 0,
                       f"{tag}: the dot plot is labelling {counts['labels']} works - it "
                       "should carry no names, only hover")

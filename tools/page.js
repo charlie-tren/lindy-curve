@@ -128,7 +128,7 @@ if (svgHero && document.getElementById("tip6")) {
 const svgShelf = document.getElementById("shelf");
 const tipShelf = tipper("tip3", svgShelf);
 const SH = {W: 960, H: 280};
-let thresh = "200";
+let thresh = "0";
 function shelf(st) {
   clear(svgShelf);
   tipShelf.reset();
@@ -299,6 +299,8 @@ function furniture() {
     if (inEra(p)) fp.push([Math.log10(p.a), Math.log10(p.d)]);
   });
   drawFit(svgScatter, fitLine(fp), view.x0, view.x1, spx, spy, SC.W - SC.R - 4, SC.T + 4);
+  svgScatter.appendChild(txt("EVERY BOOK: AGE AGAINST READERS A MONTH",
+    {class: "axl", x: SC.L, y: SC.T - 8}));
   svgScatter.appendChild(txt("AGE IN YEARS", {class: "axl",
     x: (SC.L + (SC.W - SC.R)) / 2, y: SC.H - 8, "text-anchor": "middle"}));
   const m = (SC.T + (SC.H - SC.B)) / 2;
@@ -478,8 +480,11 @@ function wiki() {
   svgWiki.appendChild(txt("AGE IN YEARS", {class: "axl",
     x: (WK.L + (WK.W - WK.R)) / 2, y: WK.H - 8, "text-anchor": "middle"}));
   const wmid = (WK.T + (WK.H - WK.B)) / 2;
-  svgWiki.appendChild(txt("WIKIPEDIA VIEWS A YEAR, 2016 TO 2026", {class: "axl", x: 14,
+  svgWiki.appendChild(txt("PAGE VIEWS A YEAR", {class: "axl", x: 14,
     y: wmid, "text-anchor": "middle", transform: "rotate(-90 14 " + wmid + ")"}));
+  const wn = document.getElementById("wnote");
+  if (wn) wn.textContent = fmt(w.n) + " of " + fmt(w.tried)
+    + " works matched to an article, averaged over ten years";
   const set = function (id, v) {
     const n = document.getElementById(id);
     if (n) n.textContent = v;
