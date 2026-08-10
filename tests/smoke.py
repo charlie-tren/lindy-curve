@@ -144,7 +144,7 @@ def main():
                 check(wk > 200, f"{tag}: Wikipedia chart has {wk} points, expected 200+")
                 # the match rate must be stated - the chart's slope is mostly a matching
                 # artefact, so publishing it without the caveat would be a false claim
-                check("matched an article" in pg.inner_text("#v-wiki"),
+                check("matched to an article" in pg.inner_text("#v-wiki"),
                       f"{tag}: the Wikipedia match rate is not disclosed on the page")
                 check(pg.inner_text("#wn").strip() and pg.inner_text("#wt").strip(),
                       f"{tag}: the matched/tried counts did not render")
@@ -255,7 +255,7 @@ def main():
                         .map(r => +r.getAttribute('height')).join(',')""")
                     check(h0 != h1,
                           f"{tag}: raising the readership bar did not change the counts")
-                    pg.select_option("#f-thresh", "1000")
+                    pg.select_option("#f-thresh", "200")
                     pg.wait_for_timeout(200)
 
 

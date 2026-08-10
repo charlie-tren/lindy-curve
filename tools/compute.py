@@ -43,7 +43,7 @@ NOW = 2026
 FLOORS = [0]
 
 # Readership bars the second chart counts books above.
-THRESHOLDS = [600, 1000, 2000, 5000, 10000]
+THRESHOLDS = [200, 600, 1000, 2000, 5000, 10000]
 
 # Works worth naming on the charts: recognisable, and spread across the age axis.
 CALLOUTS = ["Moby Dick", "Pride and Prejudice", "Romeo and Juliet", "The Odyssey",
@@ -187,10 +187,17 @@ def shelf(rows, buckets=None):
         if len(chunk) < 5:
             continue
         top = max(chunk, key=lambda r: r["d"])
+        # the current century is only 26 years old, so a raw count understates it by
+        # roughly four. Every bar is therefore scaled to a per-100-years rate.
+        span = min(c + 100, NOW) - c
+        scale = 100.0 / span if span > 0 else 1.0
         out.append({
             "c": c,
             "n": len(chunk),
+            "span": span,
             "cnt": {str(t): sum(1 for r in chunk if r["d"] >= t) for t in THRESHOLDS},
+            "rate": {str(t): round(sum(1 for r in chunk if r["d"] >= t) * scale)
+                     for t in THRESHOLDS},
             "y": c + 50,
             "i": intern_title(top["t"][:95], top["au"].split(",")[0][:30]),
         })

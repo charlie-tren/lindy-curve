@@ -128,7 +128,7 @@ if (svgHero && document.getElementById("tip6")) {
 const svgShelf = document.getElementById("shelf");
 const tipShelf = tipper("tip3", svgShelf);
 const SH = {W: 960, H: 280};
-let thresh = "1000";
+let thresh = "200";
 function shelf(st) {
   clear(svgShelf);
   tipShelf.reset();
@@ -136,7 +136,7 @@ function shelf(st) {
   // newest on the LEFT, oldest on the RIGHT, matching the curve above
   const bars = st.shelf.bars.slice().reverse();
   if (!bars.length) return;
-  const counts = bars.map(function (b) { return b.cnt[thresh] || 0; });
+  const counts = bars.map(function (b) { return b.rate[thresh] || 0; });
   /* LOG scale, because the counts span three orders of magnitude - 3,220 books from the
      1900s against 1 from the 800s. On a linear axis twenty of the twenty-six centuries
      are invisible. The cost is that bar LENGTH is no longer proportional to the count,
@@ -169,20 +169,22 @@ function shelf(st) {
     }
     const t = D.titles[b.i] || ["?", ""];
     tipShelf.add(x + bw / 2, yTop, cLab(b.c),
-      fmt(c) + " of " + fmt(b.n) + " books read more than " + fmt(+thresh)
-      + " times a month" + DOT + (c / b.n * 100).toFixed(1) + "% of the century"
+      fmt(b.cnt[thresh]) + " of " + fmt(b.n) + " books read more than " + fmt(+thresh)
+      + " times a month" + DOT + (b.cnt[thresh] / b.n * 100).toFixed(1) + "% of the century"
+      + (b.span < 100 ? DOT + "only " + b.span + " years so far, scaled to " + fmt(c)
+                        + " per century" : "")
       + DOT + "best known: " + t[0]);
   });
   svgShelf.appendChild(el("line", {class: "g", x1: L, y1: H - B, x2: W - R, y2: H - B}));
-  svgShelf.appendChild(txt("BOOKS STILL READ THAT OFTEN, BY CENTURY (LOG SCALE)",
+  svgShelf.appendChild(txt("BOOKS STILL READ THAT OFTEN, PER CENTURY (LOG SCALE)",
     {class: "axl", x: L, y: T - 4}));
   svgShelf.appendChild(txt("NEWEST", {class: "axl", x: L + 2, y: H - 6}));
   svgShelf.appendChild(txt("OLDEST", {class: "axl", x: W - R - 2, y: H - 6,
     "text-anchor": "end"}));
   const sc = document.getElementById("shcount");
   if (sc) {
-    sc.textContent = fmt(counts.reduce(function (a, v) { return a + v; }, 0))
-      + " books in total clear that bar";
+    const tot = bars.reduce(function (a, b2) { return a + b2.cnt[thresh]; }, 0);
+    sc.textContent = fmt(tot) + " books clear that bar";
   }
 }
 svgShelf.addEventListener("pointermove", function (ev) {
