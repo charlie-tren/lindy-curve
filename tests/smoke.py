@@ -155,6 +155,21 @@ def main():
                 check(pg.inner_text("#wnote").strip(),
                       f"{tag}: the Wikipedia source note did not render")
                 # the summary cards were removed, so the chart itself has to carry it
+                # all four chart titles must be the same element and treatment
+                titles = pg.evaluate("""() => {
+                    const h = [...document.querySelectorAll('.wrap h2')];
+                    const sig = h.map(e => {
+                        const s2 = getComputedStyle(e);
+                        return s2.fontFamily + '|' + s2.fontSize + '|' + s2.fontWeight
+                             + '|' + s2.letterSpacing + '|' + s2.color
+                             + '|' + s2.textTransform;
+                    });
+                    return {n: h.length, distinct: [...new Set(sig)].length};
+                }""")
+                check(titles["n"] == 4,
+                      f"{tag}: {titles['n']} chart titles, expected 4")
+                check(titles["distinct"] == 1,
+                      f"{tag}: chart titles use {titles['distinct']} different styles")
                 check(pg.locator("#wiki text.lbl").count() == 0,
                       f"{tag}: the Wikipedia chart is labelling works - hover only")
                 # the era filter must actually remove points, not just restyle a chip

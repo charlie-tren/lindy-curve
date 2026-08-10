@@ -525,9 +525,11 @@ if (svgWiki) {
     const fy = (WK.H - WK.B - u.y) / (WK.H - WK.T - WK.B);
     const ax = wView.x0 + fx * (wView.x1 - wView.x0);
     const ay = wView.y0 + fy * (wView.y1 - wView.y0);
-    const mw = wHome.x1 - wHome.x0, mh = wHome.y1 - wHome.y0;
-    const ww = Math.min(mw, Math.max(mw / 30, (wView.x1 - wView.x0) * k));
-    const hh = Math.min(mh, Math.max(mh / 30, (wView.y1 - wView.y0) * k));
+    // zooming OUT past the opening extent was capped, so the chart felt stuck.
+    // Three times the home span is enough to see the whole cloud with air round it.
+    const mw = (wHome.x1 - wHome.x0) * 3, mh = (wHome.y1 - wHome.y0) * 3;
+    const ww = Math.min(mw, Math.max(mw / 90, (wView.x1 - wView.x0) * k));
+    const hh = Math.min(mh, Math.max(mh / 90, (wView.y1 - wView.y0) * k));
     wView = {x0: ax - fx * ww, x1: ax + (1 - fx) * ww,
              y0: ay - fy * hh, y1: ay + (1 - fy) * hh};
     wiki();

@@ -60,8 +60,7 @@ nav button:hover{color:var(--ink)}
 .lede b{color:var(--ink);font-weight:400}
 h2{font:700 clamp(1rem,2.2vw,1.15rem)/1.2 var(--disp);letter-spacing:.15em;
    text-transform:uppercase;margin:0 0 -.35rem}
-h3{font:700 clamp(.85rem,1.9vw,.98rem)/1.2 var(--disp);letter-spacing:.15em;
-   text-transform:uppercase;margin:0;color:var(--dim)}
+h3{font:400 1.16rem/1.25 var(--body);margin:0}
 p{margin:0;max-width:66ch}
 .sub{font-size:.93rem;color:var(--dim)}
 .k{font:400 .78rem/1.5 var(--mono);letter-spacing:.04em;color:var(--dim)}
@@ -209,7 +208,7 @@ that survivors keep surviving can be checked. Here are 67,488 books, by age.</p>
 <text class="axl" transform="rotate(-90 38 165)" x="38" y="165" text-anchor="middle">NO. BOOKS STILL BEING READ</text>
 </svg><div class="tip" id="tip6"></div></figure>
 
-  <h3>Books still read, per century</h3>
+  <h2>Books still read, per century</h2>
   <div class="filters">
     <label><span>Books read more than</span><select id="f-thresh">
       <option value="200" selected>200 times a month</option>
@@ -815,9 +814,11 @@ if (svgWiki) {
     const fy = (WK.H - WK.B - u.y) / (WK.H - WK.T - WK.B);
     const ax = wView.x0 + fx * (wView.x1 - wView.x0);
     const ay = wView.y0 + fy * (wView.y1 - wView.y0);
-    const mw = wHome.x1 - wHome.x0, mh = wHome.y1 - wHome.y0;
-    const ww = Math.min(mw, Math.max(mw / 30, (wView.x1 - wView.x0) * k));
-    const hh = Math.min(mh, Math.max(mh / 30, (wView.y1 - wView.y0) * k));
+    // zooming OUT past the opening extent was capped, so the chart felt stuck.
+    // Three times the home span is enough to see the whole cloud with air round it.
+    const mw = (wHome.x1 - wHome.x0) * 3, mh = (wHome.y1 - wHome.y0) * 3;
+    const ww = Math.min(mw, Math.max(mw / 90, (wView.x1 - wView.x0) * k));
+    const hh = Math.min(mh, Math.max(mh / 90, (wView.y1 - wView.y0) * k));
     wView = {x0: ax - fx * ww, x1: ax + (1 - fx) * ww,
              y0: ay - fy * hh, y1: ay + (1 - fy) * hh};
     wiki();
