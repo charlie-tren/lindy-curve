@@ -149,8 +149,9 @@ def main():
                       f"{tag}: the threshold slider is still present")
                 wk = pg.evaluate("document.querySelectorAll('#wiki circle.pt').length")
                 check(wk > 80, f"{tag}: Wikipedia chart has {wk} points, expected 100+")
-                check(pg.inner_text("#wrho").startswith("+"),
-                      f"{tag}: the Wikipedia correlation did not render")
+                # the summary cards were removed, so the chart itself has to carry it
+                check(pg.locator("#wiki text.lbl").count() >= 5,
+                      f"{tag}: the Wikipedia chart names no works")
 
                 # every view draws something
                 counts = pg.evaluate("""() => ({
@@ -166,8 +167,9 @@ def main():
                 check(counts["med"] >= 20,
                       f"{tag}: only {counts['med']} century points")
                 check(counts["pts"] > 4000, f"{tag}: only {counts['pts']} scatter points")
-                check(counts["labels"] >= 12,
-                      f"{tag}: only {counts['labels']} works labelled on the scatter")
+                check(counts["labels"] == 0,
+                      f"{tag}: the dot plot is labelling {counts['labels']} works - it "
+                      "should carry no names, only hover")
                 check(counts["bars"] >= 40, f"{tag}: only {counts['bars']} shelf bars")
                 check(pg.locator("#shelf text.ax").count() >= 2,
                       f"{tag}: the shelf has no y-axis labels")

@@ -66,8 +66,8 @@ p{margin:0;max-width:66ch}
 .k{font:400 .78rem/1.5 var(--mono);letter-spacing:.04em;color:var(--dim)}
 
 .view{margin-top:2.4rem;display:flex;flex-direction:column;gap:1.15rem}
-figure{margin:0;overflow-x:auto}
-figure svg{width:100%;height:auto;display:block;min-width:540px}
+figure{margin:0}
+figure svg{width:100%;height:auto;display:block}
 .card{background:var(--panel);border:1px solid var(--rule);padding:1.15rem;
       display:flex;flex-direction:column;gap:.7rem}
 .card>*{min-width:0}
@@ -82,7 +82,7 @@ th:first-child,td:first-child{text-align:left}
 th{font:700 9px/1.6 var(--disp);letter-spacing:.14em;text-transform:uppercase;
    color:var(--dim)}
 td{font-variant-numeric:tabular-nums}
-.tw{overflow-x:auto}
+
 
 details{border-top:1px solid var(--rule);padding-top:.8rem}
 summary{cursor:pointer;font:700 10px/1.5 var(--disp);letter-spacing:.15em;
@@ -96,7 +96,7 @@ a.back{text-decoration:none;display:inline-flex;align-items:center;gap:.4rem}
 a.back .arw{display:inline-block;transition:transform .25s}
 a.back:hover .arw{transform:translateX(-4px)}
 .shelfwrap{position:relative}
-#scatwrap,#medwrap,.shelfwrap{position:relative}
+#scatwrap,#medwrap,#wikiwrap,.shelfwrap{position:relative}
 .tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
   background:var(--ground);border:1px solid var(--rule);padding:6px 9px;
   font:400 12px/1.42 var(--body);color:var(--ink);width:max-content;
@@ -106,9 +106,9 @@ a.back:hover .arw{transform:translateX(-4px)}
 .tip b{display:block;font-weight:400;color:var(--gilt)}
 .tip span{font:400 10.5px/1.5 var(--mono);color:var(--dim)}
 .zoomhint{font:400 .78rem/1.5 var(--mono);color:var(--faint)}
-#scatter{cursor:crosshair;touch-action:none;user-select:none;
+#scatter,#wiki{cursor:crosshair;touch-action:none;user-select:none;
   -webkit-user-select:none}
-#scatter.drag{cursor:grabbing}
+#scatter.drag,#wiki.drag{cursor:grabbing}
 footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
        display:flex;align-items:baseline;justify-content:space-between;gap:1.15rem;
        flex-wrap:wrap;font-size:.88rem;color:var(--dim)}
@@ -168,12 +168,6 @@ often each of its texts was read this month. Here are %%WORKS%% of them, by age.
     aria-label="Median downloads per surviving work, by century"></svg>
     <div class="tip" id="tip4"></div></figure>
 
-  <div class="card">
-    <h3>What it actually says</h3>
-    <p class="sub">Nothing much, and that is the finding. The correlation is +0.110 over the
-    whole corpus, -0.104 once the baseline band is excluded, and back across zero above
-    that. A relationship whose sign depends on an arbitrary cutoff is not a relationship.</p>
-  </div>
 
   <details class="method">
     <summary>What this cannot show</summary>
@@ -215,19 +209,10 @@ often each of its texts was read this month. Here are %%WORKS%% of them, by age.
   300 and 600 a month, too uniform to be readers - so the finding needs a measure that does
   not share the flaw. Wikipedia pageviews have no floor and run monthly back to 2016, which
   also gives the multi-year average Gutenberg cannot.</p>
+  <p class="zoomhint">Scroll to zoom, drag to pan, double-click to reset.</p>
   <figure id="wikiwrap"><svg id="wiki" viewBox="0 0 960 420" role="img"
     aria-label="Wikipedia pageviews a year against age, for well-known works"></svg>
     <div class="tip" id="tip5"></div></figure>
-  <div class="card">
-    <h3>It agrees</h3>
-    <p class="sub">Across <b id="wn"></b> well-known works matched to a Wikipedia article,
-    the correlation between age and pageviews is <b id="wrho"></b> - the same nothing the
-    download count shows for the same books (<b id="wgut"></b>). Works over three hundred
-    years old average <b id="wold"></b> views a year; newer ones, <b id="wnew"></b>.</p>
-    <p class="sub">It measures a different thing - people looking up the work, not reading
-    it - and the two only correlate at <b id="wagree"></b> with each other, which is worth
-    knowing on its own. But on the question this page asks they say the same thing.</p>
-  </div>
 </section>
 
 <footer>

@@ -66,8 +66,8 @@ p{margin:0;max-width:66ch}
 .k{font:400 .78rem/1.5 var(--mono);letter-spacing:.04em;color:var(--dim)}
 
 .view{margin-top:2.4rem;display:flex;flex-direction:column;gap:1.15rem}
-figure{margin:0;overflow-x:auto}
-figure svg{width:100%;height:auto;display:block;min-width:540px}
+figure{margin:0}
+figure svg{width:100%;height:auto;display:block}
 .card{background:var(--panel);border:1px solid var(--rule);padding:1.15rem;
       display:flex;flex-direction:column;gap:.7rem}
 .card>*{min-width:0}
@@ -82,7 +82,7 @@ th:first-child,td:first-child{text-align:left}
 th{font:700 9px/1.6 var(--disp);letter-spacing:.14em;text-transform:uppercase;
    color:var(--dim)}
 td{font-variant-numeric:tabular-nums}
-.tw{overflow-x:auto}
+
 
 details{border-top:1px solid var(--rule);padding-top:.8rem}
 summary{cursor:pointer;font:700 10px/1.5 var(--disp);letter-spacing:.15em;
@@ -96,7 +96,7 @@ a.back{text-decoration:none;display:inline-flex;align-items:center;gap:.4rem}
 a.back .arw{display:inline-block;transition:transform .25s}
 a.back:hover .arw{transform:translateX(-4px)}
 .shelfwrap{position:relative}
-#scatwrap,#medwrap,.shelfwrap{position:relative}
+#scatwrap,#medwrap,#wikiwrap,.shelfwrap{position:relative}
 .tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
   background:var(--ground);border:1px solid var(--rule);padding:6px 9px;
   font:400 12px/1.42 var(--body);color:var(--ink);width:max-content;
@@ -106,9 +106,9 @@ a.back:hover .arw{transform:translateX(-4px)}
 .tip b{display:block;font-weight:400;color:var(--gilt)}
 .tip span{font:400 10.5px/1.5 var(--mono);color:var(--dim)}
 .zoomhint{font:400 .78rem/1.5 var(--mono);color:var(--faint)}
-#scatter{cursor:crosshair;touch-action:none;user-select:none;
+#scatter,#wiki{cursor:crosshair;touch-action:none;user-select:none;
   -webkit-user-select:none}
-#scatter.drag{cursor:grabbing}
+#scatter.drag,#wiki.drag{cursor:grabbing}
 footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
        display:flex;align-items:baseline;justify-content:space-between;gap:1.15rem;
        flex-wrap:wrap;font-size:.88rem;color:var(--dim)}
@@ -196,12 +196,6 @@ often each of its texts was read this month. Here are 67,488 of them, by age.</p
     aria-label="Median downloads per surviving work, by century"></svg>
     <div class="tip" id="tip4"></div></figure>
 
-  <div class="card">
-    <h3>What it actually says</h3>
-    <p class="sub">Nothing much, and that is the finding. The correlation is +0.110 over the
-    whole corpus, -0.104 once the baseline band is excluded, and back across zero above
-    that. A relationship whose sign depends on an arbitrary cutoff is not a relationship.</p>
-  </div>
 
   <details class="method">
     <summary>What this cannot show</summary>
@@ -243,19 +237,10 @@ often each of its texts was read this month. Here are 67,488 of them, by age.</p
   300 and 600 a month, too uniform to be readers - so the finding needs a measure that does
   not share the flaw. Wikipedia pageviews have no floor and run monthly back to 2016, which
   also gives the multi-year average Gutenberg cannot.</p>
+  <p class="zoomhint">Scroll to zoom, drag to pan, double-click to reset.</p>
   <figure id="wikiwrap"><svg id="wiki" viewBox="0 0 960 420" role="img"
     aria-label="Wikipedia pageviews a year against age, for well-known works"></svg>
     <div class="tip" id="tip5"></div></figure>
-  <div class="card">
-    <h3>It agrees</h3>
-    <p class="sub">Across <b id="wn"></b> well-known works matched to a Wikipedia article,
-    the correlation between age and pageviews is <b id="wrho"></b> - the same nothing the
-    download count shows for the same books (<b id="wgut"></b>). Works over three hundred
-    years old average <b id="wold"></b> views a year; newer ones, <b id="wnew"></b>.</p>
-    <p class="sub">It measures a different thing - people looking up the work, not reading
-    it - and the two only correlate at <b id="wagree"></b> with each other, which is worth
-    knowing on its own. But on the question this page asks they say the same thing.</p>
-  </div>
 </section>
 
 <footer>
@@ -531,35 +516,20 @@ function scatter() {
   svgScatter.appendChild(ptsG);
 
   let shown = 0;
-  const inView = [];
   D.scatter.points.forEach(function (p) {
     const lx = Math.log10(p.a), ly = Math.log10(p.d);
     if (lx < view.x0 || lx > view.x1 || ly < view.y0 || ly > view.y1) return;
     shown++;
     const X = spx(lx), Y = spy(ly);
-    inView.push({X: X, Y: Y, p: p});
     tipScatter.add(X, Y, p.t || "?",
       (p.au ? p.au + DOT : "") + fmt(p.a) + " yrs old" + DOT + fmt(p.d)
       + " readers a month");
   });
-  /* Label the most-read works CURRENTLY IN VIEW rather than a fixed list of twenty -
-     which is why only some books had names before. Zooming in now names more of them,
-     and labels are skipped when they would collide with one already placed. */
-  const placed = [];
-  inView.sort(function (a, b) { return b.p.d - a.p.d; });
-  for (const q of inView) {
-    if (placed.length >= 26) break;
-    if (placed.some(function (o) {
-      return Math.abs(o.X - q.X) < 128 && Math.abs(o.Y - q.Y) < 13;
-    })) continue;
-    placed.push(q);
-    svgScatter.appendChild(el("circle", {class: "hi", cx: q.X.toFixed(1),
-      cy: q.Y.toFixed(1), r: 3.6}));
-    svgScatter.appendChild(txt(q.p.t.replace(/[;:].*$/, "").slice(0, 34),
-      {class: "lbl", x: (q.X + 7).toFixed(1), y: (q.Y + 3.5).toFixed(1)}));
-  }
-  svgScatter.appendChild(txt("AGE IN YEARS", {class: "axl", x: SC.L, y: SC.H - 6}));
-  svgScatter.appendChild(txt("READERS A MONTH", {class: "axl", x: SC.L, y: SC.T - 8}));
+  svgScatter.appendChild(txt("AGE IN YEARS", {class: "axl",
+    x: (SC.L + (SC.W - SC.R)) / 2, y: SC.H - 8, "text-anchor": "middle"}));
+  const mid = (SC.T + (SC.H - SC.B)) / 2;
+  svgScatter.appendChild(txt("READERS A MONTH", {class: "axl", x: 14, y: mid,
+    "text-anchor": "middle", transform: "rotate(-90 14 " + mid + ")"}));
   const z = (HOME.x1 - HOME.x0) / (view.x1 - view.x0);
   document.getElementById("scatnote").textContent =
     "Every " + D.scatter.meta.stride + "th work, " + fmt(D.scatter.meta.kept) + " of "
@@ -626,18 +596,23 @@ draw();
 const svgWiki = document.getElementById("wiki");
 const tipWiki = svgWiki ? tipper("tip5", svgWiki) : null;
 const WK = {W: 960, H: 420, L: 66, R: 26, T: 30, B: 52};
+let wHome = null, wView = null;
 function wiki() {
   const w = D.wiki;
   if (!w || !svgWiki) return;
   clear(svgWiki);
   tipWiki.reset();
   const pts = w.points;
-  const x0 = Math.log10(60), x1 = Math.log10(3200);
-  const y0 = Math.log10(Math.max(200, Math.min.apply(null, pts.map(p => p.w)) * 0.7));
-  const y1 = Math.log10(Math.max.apply(null, pts.map(p => p.w)) * 1.4);
+  if (!wHome) {
+    wHome = {x0: Math.log10(60), x1: Math.log10(3200),
+             y0: Math.log10(Math.max(200, Math.min.apply(null, pts.map(p => p.w)) * 0.7)),
+             y1: Math.log10(Math.max.apply(null, pts.map(p => p.w)) * 1.4)};
+    wView = Object.assign({}, wHome);
+  }
+  const x0 = wView.x0, x1 = wView.x1, y0 = wView.y0, y1 = wView.y1;
   const px = v => WK.L + (v - x0) / (x1 - x0) * (WK.W - WK.L - WK.R);
   const py = v => WK.H - WK.B - (v - y0) / (y1 - y0) * (WK.H - WK.T - WK.B);
-  [100, 200, 500, 1000, 2000].forEach(function (v) {
+  ticks(x0, x1).forEach(function (v) {
     const l = Math.log10(v);
     if (l < x0 || l > x1) return;
     svgWiki.appendChild(el("line", {class: "g", x1: px(l), y1: WK.T, x2: px(l),
@@ -645,7 +620,7 @@ function wiki() {
     svgWiki.appendChild(txt(fmt(v), {class: "ax", x: px(l), y: WK.H - WK.B + 18,
       "text-anchor": "middle"}));
   });
-  [1000, 10000, 100000, 1000000].forEach(function (v) {
+  ticks(y0, y1).forEach(function (v) {
     const l = Math.log10(v);
     if (l < y0 || l > y1) return;
     svgWiki.appendChild(el("line", {class: "g", x1: WK.L, y1: py(l), x2: WK.W - WK.R,
@@ -670,9 +645,11 @@ function wiki() {
         {class: "lbl", x: (X + 7).toFixed(1), y: (Y + 3.5).toFixed(1)}));
     }
   });
-  svgWiki.appendChild(txt("AGE IN YEARS", {class: "axl", x: WK.L, y: WK.H - 6}));
-  svgWiki.appendChild(txt("WIKIPEDIA VIEWS A YEAR, 2016 TO 2026",
-    {class: "axl", x: WK.L, y: WK.T - 10}));
+  svgWiki.appendChild(txt("AGE IN YEARS", {class: "axl",
+    x: (WK.L + (WK.W - WK.R)) / 2, y: WK.H - 8, "text-anchor": "middle"}));
+  const wmid = (WK.T + (WK.H - WK.B)) / 2;
+  svgWiki.appendChild(txt("WIKIPEDIA VIEWS A YEAR, 2016 TO 2026", {class: "axl", x: 14,
+    y: wmid, "text-anchor": "middle", transform: "rotate(-90 14 " + wmid + ")"}));
   const set = function (id, v) {
     const n = document.getElementById(id);
     if (n) n.textContent = v;
@@ -685,10 +662,50 @@ function wiki() {
   set("wagree", (w.rho_agree >= 0 ? "+" : "−") + Math.abs(w.rho_agree).toFixed(3));
 }
 if (svgWiki) {
+  let wDrag = null;
+  svgWiki.addEventListener("wheel", function (ev) {
+    ev.preventDefault();
+    const u = userPos(svgWiki, ev, WK.W, WK.H);
+    const k = ev.deltaY > 0 ? 1.18 : 1 / 1.18;
+    const fx = (u.x - WK.L) / (WK.W - WK.L - WK.R);
+    const fy = (WK.H - WK.B - u.y) / (WK.H - WK.T - WK.B);
+    const ax = wView.x0 + fx * (wView.x1 - wView.x0);
+    const ay = wView.y0 + fy * (wView.y1 - wView.y0);
+    const mw = wHome.x1 - wHome.x0, mh = wHome.y1 - wHome.y0;
+    const ww = Math.min(mw, Math.max(mw / 30, (wView.x1 - wView.x0) * k));
+    const hh = Math.min(mh, Math.max(mh / 30, (wView.y1 - wView.y0) * k));
+    wView = {x0: ax - fx * ww, x1: ax + (1 - fx) * ww,
+             y0: ay - fy * hh, y1: ay + (1 - fy) * hh};
+    wiki();
+  }, {passive: false});
+  svgWiki.addEventListener("pointerdown", function (ev) {
+    ev.preventDefault();
+    wDrag = {u: userPos(svgWiki, ev, WK.W, WK.H), v: Object.assign({}, wView)};
+    svgWiki.classList.add("drag");
+    svgWiki.setPointerCapture(ev.pointerId);
+  });
+  svgWiki.addEventListener("pointerup", function () {
+    wDrag = null;
+    svgWiki.classList.remove("drag");
+  });
   svgWiki.addEventListener("pointermove", function (ev) {
-    tipWiki.track(userPos(svgWiki, ev, WK.W, WK.H), WK.W, WK.H, 14);
+    const u = userPos(svgWiki, ev, WK.W, WK.H);
+    if (wDrag) {
+      const dx = (u.x - wDrag.u.x) / (WK.W - WK.L - WK.R) * (wDrag.v.x1 - wDrag.v.x0);
+      const dy = (u.y - wDrag.u.y) / (WK.H - WK.T - WK.B) * (wDrag.v.y1 - wDrag.v.y0);
+      wView = {x0: wDrag.v.x0 - dx, x1: wDrag.v.x1 - dx,
+               y0: wDrag.v.y0 + dy, y1: wDrag.v.y1 + dy};
+      tipWiki.hide();
+      wiki();
+      return;
+    }
+    tipWiki.track(u, WK.W, WK.H, 14);
   });
   svgWiki.addEventListener("pointerleave", function () { tipWiki.hide(); });
+  svgWiki.addEventListener("dblclick", function () {
+    wView = Object.assign({}, wHome);
+    wiki();
+  });
 }
 wiki();
 
