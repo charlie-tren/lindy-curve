@@ -120,11 +120,7 @@ def main():
                     const bars = [...document.querySelectorAll('#shelf rect[data-year]')]
                       .map(r => ({x: +r.getAttribute('x'), y: +r.getAttribute('data-year')}))
                       .sort((a, b) => a.x - b.x);
-                    const labs = [...document.querySelectorAll('#medchart text.ax')]
-                      .filter(t => /BC|\d{3,4}s|0-99/.test(t.textContent))
-                      .map(t => ({x: +t.getAttribute('x'), t: t.textContent.trim()}))
-                      .sort((a, b) => a.x - b.x);
-                    const yr = s => s.includes('BC') ? -parseInt(s) : parseInt(s) || 0;
+                    const labs = [];
                     return {shelf: bars.length > 3
                               ? [bars[0].y, bars[bars.length - 1].y] : null,
                             cent: labs.length > 2
@@ -133,10 +129,7 @@ def main():
                 if check(order["shelf"], f"{tag}: shelf bars carry no year data"):
                     check(order["shelf"][1] < order["shelf"][0],
                           f"{tag}: SHELF AXIS INVERTED {order['shelf']} - newest left")
-                if check(order["cent"], f"{tag}: century chart has no readable labels"):
-                    check(order["cent"][1] < order["cent"][0],
-                          f"{tag}: CENTURY AXIS INVERTED {order['cent']} - must run "
-                          "newest-left like the curve and shelf above it")
+
 
                 # the methodology must appear once, on the first view only
                 check(pg.locator(".method").count() == 1,
@@ -163,31 +156,38 @@ def main():
                     before = pg.evaluate("""() => [...document.querySelectorAll(
                         '#scatter circle.pt')].filter(c => c.getAttribute('cx') !== '-99')
                         .length""")
-                    pg.click('#filters .chip[data-era="anc"]')
+                    pg.select_option("#f-era", "anc")
                     pg.wait_for_timeout(250)
                     after = pg.evaluate("""() => [...document.querySelectorAll(
                         '#scatter circle.pt')].filter(c => c.getAttribute('cx') !== '-99')
                         .length""")
                     check(after < before / 2,
                           f"{tag}: era filter went {before} -> {after}, expected far fewer")
-                    pg.click('#filters .chip[data-era="all"]')
+                    pg.select_option("#f-era", "all")
                     pg.wait_for_timeout(200)
                     # language and readership filter the same cloud
-                    for sel, name in [('.chip[data-lang="fr"]', "language"),
-                                      ('.chip[data-min="10000"]', "readership")]:
-                        pg.click(sel)
+                    # each filter tested on its own - they compose, so leaving the
+                    # previous one set makes French + 10,000+ + philosophy genuinely zero
+                    for sel, val, name in [("#f-lang", "fr", "language"),
+                                           ("#f-min", "10000", "readership"),
+                                           ("#f-subj", "phil", "subject")]:
+                        pg.select_option(sel, val)
                         pg.wait_for_timeout(250)
                         n = pg.evaluate("""() => [...document.querySelectorAll(
                             '#scatter circle.pt')].filter(c => c.getAttribute('cx')
                             !== '-99').length""")
                         check(0 < n < before / 2,
                               f"{tag}: the {name} filter left {n} points of {before}")
-                    pg.click('.chip[data-lang="all"]')
-                    pg.click('.chip[data-min="0"]')
-                    pg.wait_for_timeout(200)
+                        pg.select_option(sel, "all" if sel != "#f-min" else "0")
+                        pg.wait_for_timeout(150)
+
                     # During a drag the cloud is translated for speed while the
                     # gridlines are REDRAWN at the live view - so the lines must move
                     # with the data and the axis numbers must stay correct at the edge.
+                    # mouse.move takes VIEWPORT coordinates, so the chart has to be on
+                    # screen first - this exact trap has produced two false failures
+                    pg.locator("#scatter").scroll_into_view_if_needed()
+                    pg.wait_for_timeout(200)
                     grid0 = pg.evaluate("""() => {
                         const l = document.querySelector('#grid line');
                         return l ? +l.getAttribute('x1') : null; }""")
@@ -223,17 +223,10 @@ def main():
 
                 # every view draws something
                 counts = pg.evaluate("""() => ({
-                    med: document.querySelectorAll('#medchart .medpt').length,
-                    medpath: document.querySelectorAll('#medchart path.med').length,
                     pts: document.querySelectorAll('#scatter circle.pt').length,
                     bars: document.querySelectorAll('#shelf rect').length,
-                    band: document.querySelectorAll('#medchart path').length,
                     labels: document.querySelectorAll('#scatter text.lbl').length,
-
                 })""")
-                check(counts["medpath"] == 1, f"{tag}: median line missing")
-                check(counts["med"] >= 20,
-                      f"{tag}: only {counts['med']} century points")
                 check(counts["pts"] > 4000, f"{tag}: only {counts['pts']} scatter points")
                 check(counts["labels"] == 0,
                       f"{tag}: the dot plot is labelling {counts['labels']} works - it "
@@ -241,9 +234,6 @@ def main():
                 check(counts["bars"] >= 40, f"{tag}: only {counts['bars']} shelf bars")
                 check(pg.locator("#shelf text.ax").count() >= 2,
                       f"{tag}: the shelf has no y-axis labels")
-                check(counts["band"] >= 2,
-                      f"{tag}: century chart has {counts['band']} paths, needs a quartile "
-                      "band and a median line")
 
 
                 check(pg.locator("footer a.back .arw").count() == 1,
@@ -275,7 +265,7 @@ def main():
                 # hover is a pointer interaction, and at 375px these charts scroll
                 # inside their figure so a given bar may be off-screen. Desktop only.
                 for sel, tid, name in ([("#shelf rect", "tip3", "shelf"),
-                                        ("#medchart circle.medpt", "tip4", "century line")]
+                                        ]
                                        if w >= 1280 else []):
                     # scroll it under the viewport first - mouse.move takes viewport
                     # coordinates, so an element 1,500px down is unreachable and the
@@ -297,7 +287,7 @@ def main():
                 }""")
                 check(col[0] != col[1], f"{tag}: text and background are the same colour")
                 print(f"{tag:<12} pts={counts['pts']:<5} bars={counts['bars']:<3} "
-                      f"centuries={counts['med']:<3} labels={counts['labels']:<3}"
+                      f"labels={counts['labels']:<3}"
                       f"   {col[0]} on {col[1]}")
                 ctx.close()
             b.close()

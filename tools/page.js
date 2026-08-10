@@ -172,69 +172,6 @@ svgShelf.addEventListener("pointermove", function (ev) {
 });
 svgShelf.addEventListener("pointerleave", function () { tipShelf.hide(); });
 
-/* -------------------------------------------------------- median by century */
-const svgMed = document.getElementById("medchart");
-const tipMed = tipper("tip4", svgMed);
-const MD = {W: 960, H: 340};
-function median(st) {
-  clear(svgMed);
-  tipMed.reset();
-  const W = MD.W, H = MD.H, L = 66, R = 24, T = 26, B = 62;
-  // reversed: newest on the LEFT, oldest on the RIGHT, matching the curve and the shelf.
-  // Ascending-by-year put it in the opposite direction to both of them on the same page.
-  const cs = st.centuries.slice().reverse();
-  if (!cs.length) return;
-  const lo = Math.log10(Math.max(60, Math.min.apply(null, cs.map(c => c.p25)) * 0.85));
-  const hi = Math.log10(Math.max.apply(null, cs.map(c => c.p75)) * 1.3);
-  const x = i => L + (cs.length < 2 ? 0 : i / (cs.length - 1)) * (W - L - R);
-  const y = v => H - B - (Math.log10(v) - lo) / (hi - lo) * (H - T - B);
-  [100, 300, 1000, 3000, 10000, 30000, 100000].forEach(function (g) {
-    if (Math.log10(g) < lo || Math.log10(g) > hi) return;
-    svgMed.appendChild(el("line", {class: "g", x1: L, y1: y(g), x2: W - R, y2: y(g)}));
-    svgMed.appendChild(txt(yLab(g), {class: "ax", x: L - 8, y: y(g) + 4,
-      "text-anchor": "end"}));
-  });
-  // the quartile band, folded in from what used to be its own tab
-  let up = "", dn = "";
-  cs.forEach(function (c, i) {
-    up += (i ? " L" : "M") + x(i).toFixed(1) + "," + y(c.p75).toFixed(1);
-  });
-  for (let i = cs.length - 1; i >= 0; i--) {
-    dn += " L" + x(i).toFixed(1) + "," + y(cs[i].p25).toFixed(1);
-  }
-  svgMed.appendChild(el("path", {d: up + dn + " Z", fill: "var(--gilt)",
-    "fill-opacity": 0.15, stroke: "none"}));
-  let d = "";
-  cs.forEach(function (c, i) {
-    d += (i ? " L" : "M") + x(i).toFixed(1) + "," + y(c.med).toFixed(1);
-  });
-  svgMed.appendChild(el("path", {class: "med", d: d}));
-  const every = Math.ceil(cs.length / 9);
-  cs.forEach(function (c, i) {
-    svgMed.appendChild(el("circle", {class: "medpt", cx: x(i).toFixed(1),
-      cy: y(c.med).toFixed(1), r: 3.4, fill: "var(--c" + band(c.c) + ")"}));
-    if (i % every === 0 || i === cs.length - 1) {
-      const g = el("g", {transform: "rotate(-42 " + x(i).toFixed(1) + " "
-        + (H - B + 16) + ")"});
-      g.appendChild(txt(cLab(c.c), {class: "ax", x: x(i).toFixed(1), y: H - B + 16,
-        "text-anchor": "end"}));
-      svgMed.appendChild(g);
-    }
-    tipMed.add(x(i), y(c.med), cLab(c.c),
-      fmt(c.n) + " works" + DOT + "median " + fmt(c.med) + DOT + "middle half "
-      + fmt(c.p25) + " to " + fmt(c.p75));
-  });
-  svgMed.appendChild(el("line", {class: "g", x1: L, y1: H - B, x2: W - R, y2: H - B}));
-  svgMed.appendChild(txt("MEDIAN AND MIDDLE 50% PER CENTURY, READERS A MONTH (LOG)",
-    {class: "axl", x: L, y: T - 10}));
-  svgMed.appendChild(txt("newest", {class: "axl", x: L, y: H - 8}));
-  svgMed.appendChild(txt("oldest", {class: "axl", x: W - R, y: H - 8,
-    "text-anchor": "end"}));
-}
-svgMed.addEventListener("pointermove", function (ev) {
-  tipMed.track(userPos(svgMed, ev, MD.W, MD.H), MD.W, MD.H, 22, true);
-});
-svgMed.addEventListener("pointerleave", function () { tipMed.hide(); });
 
 
 /* --------------------------------------------- scatter: zoom, pan and hover */
@@ -588,22 +525,19 @@ wiki();
 function draw() {
   const st = state();
   shelf(st);
-  median(st);
   scatter();
 }
 draw();
 
-/* the era filter above the dot plot */
-document.querySelectorAll(".filters .chip").forEach(function (btn) {
-  btn.addEventListener("click", function () {
-    const row = btn.parentNode;
-    row.querySelectorAll(".chip").forEach(function (b) {
-      b.classList.toggle("on", b === btn);
-    });
-    if (btn.hasAttribute("data-era")) era = btn.getAttribute("data-era");
-    if (btn.hasAttribute("data-lang")) lang = btn.getAttribute("data-lang");
-    if (btn.hasAttribute("data-min")) minRead = +btn.getAttribute("data-min");
-    if (btn.hasAttribute("data-subj")) subj = btn.getAttribute("data-subj");
+/* the dropdown filters above the dot plot */
+[["f-era", function (v) { era = v; }],
+ ["f-subj", function (v) { subj = v; }],
+ ["f-lang", function (v) { lang = v; }],
+ ["f-min", function (v) { minRead = +v; }]].forEach(function (pair) {
+  const sel = document.getElementById(pair[0]);
+  if (!sel) return;
+  sel.addEventListener("change", function () {
+    pair[1](sel.value);
     scatter();
   });
 });

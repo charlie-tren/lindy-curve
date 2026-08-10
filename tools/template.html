@@ -96,7 +96,7 @@ a.back{text-decoration:none;display:inline-flex;align-items:center;gap:.4rem}
 a.back .arw{display:inline-block;transition:transform .25s}
 a.back:hover .arw{transform:translateX(-4px)}
 .shelfwrap{position:relative}
-#scatwrap,#medwrap,#wikiwrap,#herowrap,.shelfwrap{position:relative}
+#scatwrap,#wikiwrap,#herowrap,.shelfwrap{position:relative}
 .tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
   background:var(--ground);border:1px solid var(--rule);padding:6px 9px;
   font:400 12px/1.42 var(--body);color:var(--ink);width:max-content;
@@ -106,14 +106,21 @@ a.back:hover .arw{transform:translateX(-4px)}
 .tip b{display:block;font-weight:400;color:var(--gilt)}
 .tip span{font:400 10.5px/1.5 var(--mono);color:var(--dim)}
 .filters{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
-.flab{font:700 9.5px/1 var(--disp);letter-spacing:.15em;text-transform:uppercase;
-  color:var(--gilt);margin-right:.2rem}
-.chip{appearance:none;cursor:pointer;background:transparent;color:var(--dim);
-  border:1px solid var(--rule);border-radius:999px;padding:.3rem .66rem;
-  font:400 11.5px/1 var(--body);transition:color .15s,border-color .15s,background .15s}
-.chip:hover{color:var(--ink);border-color:var(--gilt)}
-.chip.on{background:var(--gilt);border-color:var(--gilt);color:var(--ground)}
-.fcount{font:400 .74rem/1 var(--mono);color:var(--faint);margin-left:auto}
+
+.filters{gap:.9rem}
+.filters label{display:inline-flex;flex-direction:column;gap:.25rem}
+.filters label span{font:700 9px/1 var(--disp);letter-spacing:.14em;
+  text-transform:uppercase;color:var(--faint)}
+.filters select{appearance:none;cursor:pointer;background:var(--panel);color:var(--ink);
+  border:1px solid var(--rule);border-radius:3px;padding:.36rem 1.7rem .36rem .55rem;
+  font:400 13px/1.2 var(--body);
+  background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),
+    linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+  background-position:calc(100% - 14px) 55%,calc(100% - 9px) 55%;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.filters select:hover{border-color:var(--gilt)}
+.fcount{font:400 .74rem/1 var(--mono);color:var(--faint);margin-left:auto;
+  align-self:flex-end;padding-bottom:.5rem}
 .zoomhint{font:400 .78rem/1.5 var(--mono);color:var(--faint)}
 figure svg{user-select:none;-webkit-user-select:none}
 #scatter,#wiki{cursor:crosshair;touch-action:none}
@@ -163,8 +170,9 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
 </header>
 
 <p class="lede">Homer is still read after 2,500 years. Most books are forgotten inside
-ten. The Lindy effect says that gap is the point - and Gutenberg publishes how many people
-opened each text this month, so it can be checked. Here are %%WORKS%% books, by age.</p>
+ten. The Lindy effect reckons the survivors are the safe bet - whatever has lasted will
+keep lasting - and Gutenberg publishes how many people opened each text this month, so it
+can be checked. Here are %%WORKS%% books, by age.</p>
 
 <!-- ============================================================ the curve -->
 <section class="view" id="v-curve">
@@ -175,9 +183,6 @@ opened each text this month, so it can be checked. Here are %%WORKS%% books, by 
     aria-label="One bar per age step, height is readership"></svg>
     <div class="tip" id="tip3"></div></figure>
 
-  <figure id="medwrap"><svg id="medchart" viewBox="0 0 960 340" role="img"
-    aria-label="Median downloads per surviving work, by century"></svg>
-    <div class="tip" id="tip4"></div></figure>
 
 
   <details class="method">
@@ -200,39 +205,24 @@ opened each text this month, so it can be checked. Here are %%WORKS%% books, by 
 
 <!-- =========================================================== the scatter -->
 <section class="view" id="v-scatter">
-  <div class="filters" id="filters" role="group" aria-label="Filter by era">
-    <span class="flab">Show</span>
-    <button type="button" class="chip on" data-era="all">Everything</button>
-    <button type="button" class="chip" data-era="anc">Before 1500</button>
-    <button type="button" class="chip" data-era="ear">1500 to 1800</button>
-    <button type="button" class="chip" data-era="c19">1800s</button>
-    <button type="button" class="chip" data-era="mod">1900 on</button>
-  </div>
-  <div class="filters" role="group" aria-label="Filter by subject">
-    <span class="flab">Subject</span>
-    <button type="button" class="chip on" data-subj="all">All</button>
-    <button type="button" class="chip" data-subj="lit">Literature</button>
-    <button type="button" class="chip" data-subj="hist">History</button>
-    <button type="button" class="chip" data-subj="phil">Philosophy</button>
-    <button type="button" class="chip" data-subj="sci">Science</button>
-    <button type="button" class="chip" data-subj="social">Social science</button>
-    <button type="button" class="chip" data-subj="arts">Arts</button>
-  </div>
-  <div class="filters" role="group" aria-label="Filter by language">
-    <span class="flab">Language</span>
-    <button type="button" class="chip on" data-lang="all">Any</button>
-    <button type="button" class="chip" data-lang="en">English</button>
-    <button type="button" class="chip" data-lang="fr">French</button>
-    <button type="button" class="chip" data-lang="fi">Finnish</button>
-    <button type="button" class="chip" data-lang="de">German</button>
-    <button type="button" class="chip" data-lang="other">Other</button>
-  </div>
-  <div class="filters" role="group" aria-label="Filter by readership">
-    <span class="flab">Readers</span>
-    <button type="button" class="chip on" data-min="0">Any</button>
-    <button type="button" class="chip" data-min="600">600+ a month</button>
-    <button type="button" class="chip" data-min="2000">2,000+</button>
-    <button type="button" class="chip" data-min="10000">10,000+</button>
+  <div class="filters">
+    <label><span>Era</span><select id="f-era">
+      <option value="all">Everything</option><option value="anc">Before 1500</option>
+      <option value="ear">1500 to 1800</option><option value="c19">1800s</option>
+      <option value="mod">1900 on</option></select></label>
+    <label><span>Subject</span><select id="f-subj">
+      <option value="all">All subjects</option><option value="lit">Literature</option>
+      <option value="hist">History</option><option value="phil">Philosophy</option>
+      <option value="sci">Science</option><option value="social">Social science</option>
+      <option value="arts">Arts</option></select></label>
+    <label><span>Language</span><select id="f-lang">
+      <option value="all">Any language</option><option value="en">English</option>
+      <option value="fr">French</option><option value="fi">Finnish</option>
+      <option value="de">German</option><option value="other">Other</option></select></label>
+    <label><span>Readers</span><select id="f-min">
+      <option value="0">Any</option><option value="600">600+ a month</option>
+      <option value="2000">2,000+</option><option value="10000">10,000+</option>
+      </select></label>
     <span class="fcount" id="fcount"></span>
   </div>
   <figure id="scatwrap"><svg id="scatter" viewBox="0 0 960 470" role="img"

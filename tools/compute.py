@@ -173,8 +173,8 @@ def shelf(rows, slots=64):
             best[k] = r
     return {"lo": lo, "hi": hi, "slots": slots,
             "bars": [{"k": k, "d": best[k]["d"], "y": best[k]["y"],
-                      "i": intern_title(best[k]["t"][:46],
-                                        best[k]["au"].split(",")[0][:24])}
+                      "i": intern_title(best[k]["t"][:95],
+                                        best[k]["au"].split(",")[0][:30])}
                      for k in sorted(best)]}
 
 
