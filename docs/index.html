@@ -378,7 +378,7 @@ function drawFit(svg, fit, x0, x1, px, py, labelX, labelY) {
   const ya = fit.intercept + fit.slope * x0, yb = fit.intercept + fit.slope * x1;
   svg.appendChild(el("line", {class: "fit", x1: px(x0).toFixed(1), y1: py(ya).toFixed(1),
     x2: px(x1).toFixed(1), y2: py(yb).toFixed(1)}));
-  svg.appendChild(txt("best fit  r² = " + fit.r2.toFixed(3)
+  svg.appendChild(txt("r² = " + fit.r2.toFixed(3)
     + "  (n = " + fmt(fit.n) + ")", {class: "fitl", x: labelX, y: labelY,
     "text-anchor": "end"}));
 }
@@ -586,6 +586,46 @@ function inEra(p) {
   return y >= 1900;
 }
 let gridG = null;
+let fnQueued = false;
+function furnitureSoon() {
+  if (fnQueued) return;
+  fnQueued = true;
+  requestAnimationFrame(function () { fnQueued = false; furniture(); });
+}
+function furniture() {
+  // everything except the cloud, redrawn at the live view so the gridlines follow the
+  // data while the axis NUMBERS stay anchored and correct
+  const keep = ptsG;
+  const drop = [];
+  for (let i = 0; i < svgScatter.childNodes.length; i++) {
+    if (svgScatter.childNodes[i] !== keep) drop.push(svgScatter.childNodes[i]);
+  }
+  drop.forEach(function (n) { svgScatter.removeChild(n); });
+  gridG = el("g", {id: "grid"});
+  svgScatter.insertBefore(gridG, keep || null);
+  ticks(view.x0, view.x1).forEach(function (v) {
+    const X = spx(Math.log10(v));
+    gridG.appendChild(el("line", {class: "g", x1: X, y1: SC.T, x2: X, y2: SC.H - SC.B}));
+    gridG.appendChild(txt(fmt(v), {class: "ax", x: X, y: SC.H - SC.B + 18,
+      "text-anchor": "middle"}));
+  });
+  ticks(view.y0, view.y1).forEach(function (v) {
+    const Y = spy(Math.log10(v));
+    gridG.appendChild(el("line", {class: "g", x1: SC.L, y1: Y, x2: SC.W - SC.R, y2: Y}));
+    gridG.appendChild(txt(yLab(v), {class: "ax", x: SC.L - 7, y: Y + 4,
+      "text-anchor": "end"}));
+  });
+  const fp = [];
+  D.scatter.points.forEach(function (p) {
+    if (inEra(p)) fp.push([Math.log10(p.a), Math.log10(p.d)]);
+  });
+  drawFit(svgScatter, fitLine(fp), view.x0, view.x1, spx, spy, SC.W - SC.R - 4, SC.T + 4);
+  svgScatter.appendChild(txt("AGE IN YEARS", {class: "axl",
+    x: (SC.L + (SC.W - SC.R)) / 2, y: SC.H - 8, "text-anchor": "middle"}));
+  const m = (SC.T + (SC.H - SC.B)) / 2;
+  svgScatter.appendChild(txt("READERS A MONTH", {class: "axl", x: 14, y: m,
+    "text-anchor": "middle", transform: "rotate(-90 14 " + m + ")"}));
+}
 function scatter() {
   clear(svgScatter);
   tipScatter.reset();
@@ -686,10 +726,10 @@ svgScatter.addEventListener("pointermove", function (ev) {
     // A pan is a pure translation, so shifting the group is exact AND costs one
     // attribute write instead of repositioning every circle. Axes redraw on the frame;
     // the cloud snaps back to real coordinates when the drag ends.
-    const shift = "translate(" + (u.x - dragging.u.x).toFixed(1) + ","
-      + (u.y - dragging.u.y).toFixed(1) + ")";
-    if (ptsG) ptsG.setAttribute("transform", shift);
-    if (gridG) gridG.setAttribute("transform", shift);
+    if (ptsG) ptsG.setAttribute("transform",
+      "translate(" + (u.x - dragging.u.x).toFixed(1) + ","
+      + (u.y - dragging.u.y).toFixed(1) + ")");
+    furnitureSoon();
     tipScatter.hide();
     return;
   }

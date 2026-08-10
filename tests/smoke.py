@@ -179,24 +179,39 @@ def main():
                     pg.click('.chip[data-lang="all"]')
                     pg.click('.chip[data-min="0"]')
                     pg.wait_for_timeout(200)
-                    # the grid must travel with the cloud during a drag, or the points
-                    # slide off their own axes
+                    # During a drag the cloud is translated for speed while the
+                    # gridlines are REDRAWN at the live view - so the lines must move
+                    # with the data and the axis numbers must stay correct at the edge.
+                    grid0 = pg.evaluate("""() => {
+                        const l = document.querySelector('#grid line');
+                        return l ? +l.getAttribute('x1') : null; }""")
                     bx = pg.locator("#scatter").bounding_box()
                     pg.mouse.move(bx["x"] + bx["width"] * .5, bx["y"] + bx["height"] * .5)
                     pg.mouse.down()
-                    pg.mouse.move(bx["x"] + bx["width"] * .35,
-                                  bx["y"] + bx["height"] * .45, steps=6)
-                    pg.wait_for_timeout(120)
-                    tr = pg.evaluate("""() => ({
-                        cloud: (document.getElementById('cloud') || {}).getAttribute
-                               ? document.getElementById('cloud').getAttribute('transform')
-                               : null,
-                        grid: document.getElementById('grid')
-                              ? document.getElementById('grid').getAttribute('transform')
-                              : null})""")
-                    check(tr["grid"] and tr["grid"] == tr["cloud"],
-                          f"{tag}: grid transform {tr['grid']!r} does not match the "
-                          f"cloud {tr['cloud']!r} - gridlines will not move with the data")
+                    pg.mouse.move(bx["x"] + bx["width"] * .3,
+                                  bx["y"] + bx["height"] * .45, steps=8)
+                    pg.wait_for_timeout(250)
+                    state = pg.evaluate("""() => {
+                        const l = document.querySelector('#grid line');
+                        const g = document.getElementById('grid');
+                        const c = document.getElementById('cloud');
+                        return {x: l ? +l.getAttribute('x1') : null,
+                                gt: g ? g.getAttribute('transform') : 'missing',
+                                ct: c ? c.getAttribute('transform') : 'missing',
+                                fit: document.querySelectorAll('#scatter line.fit').length};
+                    }""")
+                    check(grid0 is not None and state["x"] is not None
+                          and abs(state["x"] - grid0) > 1,
+                          f"{tag}: gridline stayed at x={grid0} through a pan - it must "
+                          "move with the data")
+                    check(not state["gt"],
+                          f"{tag}: the grid carries transform {state['gt']!r}; it should be "
+                          "redrawn at the live view so the axis numbers stay correct")
+                    check(state["ct"] and state["ct"].startswith("translate"),
+                          f"{tag}: the cloud is not being translated during the drag")
+                    check(state["fit"] == 1,
+                          f"{tag}: the r-squared fit line vanished mid-pan "
+                          f"({state['fit']} lines)")
                     pg.mouse.up()
                     pg.wait_for_timeout(200)
 
