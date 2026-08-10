@@ -76,7 +76,7 @@ def hero_svg(callouts, w=960, h=340):
              'text-anchor="end">OLDER</text>')
     o.append(f'<text class="axl" transform="rotate(-90 {L - 22} {(T + h - B) / 2:.0f})" '
              f'x="{L - 22}" y="{(T + h - B) / 2:.0f}" text-anchor="middle">'
-             'READERS A MONTH</text>')
+             'BOOKS STILL READ</text>')
     o.append(f'<text class="axl" x="{L}" y="{T - 14}">'
              'THE PREDICTION, NOT THE DATA</text>')
     o.append("</svg>")

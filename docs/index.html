@@ -203,7 +203,7 @@ that survivors keep surviving can be checked. Here are 67,488 books, by age.</p>
 <line class="g" x1="60" y1="284" x2="930" y2="284"/>
 <text class="axl" x="60" y="304">NEWER</text>
 <text class="axl" x="930" y="304" text-anchor="end">OLDER</text>
-<text class="axl" transform="rotate(-90 38 165)" x="38" y="165" text-anchor="middle">READERS A MONTH</text>
+<text class="axl" transform="rotate(-90 38 165)" x="38" y="165" text-anchor="middle">BOOKS STILL READ</text>
 <text class="axl" x="60" y="32">THE PREDICTION, NOT THE DATA</text>
 </svg><div class="tip" id="tip6"></div></figure>
 
@@ -473,8 +473,11 @@ function shelf(st) {
       + DOT + "best known: " + t[0]);
   });
   svgShelf.appendChild(el("line", {class: "g", x1: L, y1: H - B, x2: W - R, y2: H - B}));
-  svgShelf.appendChild(txt("BOOKS STILL READ THAT OFTEN, PER CENTURY (LOG SCALE)",
+  svgShelf.appendChild(txt("THE MEASURED VERSION: BOOKS STILL READ, PER CENTURY",
     {class: "axl", x: L, y: T - 4}));
+  const smid = (T + (H - B)) / 2;
+  svgShelf.appendChild(txt("BOOKS  (LOG)", {class: "axl", x: 13, y: smid,
+    "text-anchor": "middle", transform: "rotate(-90 13 " + smid + ")"}));
   svgShelf.appendChild(txt("NEWEST", {class: "axl", x: L + 2, y: H - 6}));
   svgShelf.appendChild(txt("OLDEST", {class: "axl", x: W - R - 2, y: H - 6,
     "text-anchor": "end"}));

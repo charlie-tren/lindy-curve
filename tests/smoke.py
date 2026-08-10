@@ -92,7 +92,7 @@ def main():
                           f"{tag}: AXIS INVERTED - oldest work '{pos['name']}' "
                           f"({max_age}yrs) at x={pos['x']:.0f} of {pos['w']}, "
                           "should be past halfway in the flat tail")
-                check(pg.locator("#v-curve text", has_text="READERS A MONTH").count() > 0,
+                check(pg.locator("#v-curve text", has_text="BOOKS STILL READ").count() > 0,
                       f"{tag}: hero has no y-axis label")
 
                 # SAME GUARD ON THE SHELF. Age rises to the right there too, and the
@@ -247,7 +247,7 @@ def main():
                 }""")
                 check(sh["n"] >= 20 and sh["n"] <= 30,
                       f"{tag}: {sh['n']} shelf bars, expected one per century (~26)")
-                check("STILL READ THAT OFTEN" in pg.inner_text("#v-curve"),
+                check("BOOKS STILL READ, PER CENTURY" in pg.inner_text("#v-curve"),
                       f"{tag}: the shelf does not say what it is counting")
                 # changing the readership bar must change the bar heights, not just a label
                 if w >= 1280:

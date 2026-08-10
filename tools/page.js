@@ -176,8 +176,11 @@ function shelf(st) {
       + DOT + "best known: " + t[0]);
   });
   svgShelf.appendChild(el("line", {class: "g", x1: L, y1: H - B, x2: W - R, y2: H - B}));
-  svgShelf.appendChild(txt("BOOKS STILL READ THAT OFTEN, PER CENTURY (LOG SCALE)",
+  svgShelf.appendChild(txt("THE MEASURED VERSION: BOOKS STILL READ, PER CENTURY",
     {class: "axl", x: L, y: T - 4}));
+  const smid = (T + (H - B)) / 2;
+  svgShelf.appendChild(txt("BOOKS  (LOG)", {class: "axl", x: 13, y: smid,
+    "text-anchor": "middle", transform: "rotate(-90 13 " + smid + ")"}));
   svgShelf.appendChild(txt("NEWEST", {class: "axl", x: L + 2, y: H - 6}));
   svgShelf.appendChild(txt("OLDEST", {class: "axl", x: W - R - 2, y: H - 6,
     "text-anchor": "end"}));
