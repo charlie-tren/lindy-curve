@@ -231,9 +231,22 @@ def main():
                 check(counts["labels"] == 0,
                       f"{tag}: the dot plot is labelling {counts['labels']} works - it "
                       "should carry no names, only hover")
-                check(counts["bars"] >= 40, f"{tag}: only {counts['bars']} shelf bars")
+                check(counts["bars"] >= 15, f"{tag}: only {counts['bars']} shelf bars")
                 check(pg.locator("#shelf text.ax").count() >= 2,
                       f"{tag}: the shelf has no y-axis labels")
+                # the shelf plots MEDIANS per equal-count bucket, not the one most-read
+                # book per slot - a maximum drew the canon rather than the corpus
+                sh = pg.evaluate("""() => {
+                    const r = [...document.querySelectorAll('#shelf rect')];
+                    return {n: r.length,
+                            p75: document.querySelectorAll('#shelf line.p75').length};
+                }""")
+                check(sh["n"] >= 15 and sh["n"] <= 22,
+                      f"{tag}: {sh['n']} shelf bars, expected one per age bucket (~20)")
+                check(sh["p75"] == sh["n"],
+                      f"{tag}: {sh['p75']} upper-quartile marks for {sh['n']} bars")
+                check("MEDIAN READERS" in pg.inner_text("#v-curve"),
+                      f"{tag}: the shelf does not say it is showing medians")
 
 
                 check(pg.locator("footer a.back .arw").count() == 1,

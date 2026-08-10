@@ -124,46 +124,50 @@ if (svgHero && document.getElementById("tip6")) {
   svgHero.addEventListener("pointerleave", function () { tipHero.hide(); });
 }
 
-/* ------------------------------------------------------------------- shelf */
+/* --------------------------------------------------- shelf: medians, not maxima */
 const svgShelf = document.getElementById("shelf");
 const tipShelf = tipper("tip3", svgShelf);
 const SH = {W: 960, H: 260};
 function shelf(st) {
   clear(svgShelf);
   tipShelf.reset();
-  const W = SH.W, H = SH.H, L = 10, R = 10, T = 16, B = 30;
-  const bars = st.shelf.bars, slots = st.shelf.slots;
+  const W = SH.W, H = SH.H, L = 54, R = 12, T = 18, B = 32;
+  const bars = st.shelf.bars;
   if (!bars.length) return;
-  const top = Math.log10(Math.max.apply(null, bars.map(b => b.d)) * 1.1);
-  const bot = Math.log10(Math.max(60, Math.min.apply(null, bars.map(b => b.d)))) * 0.985;
-  const bw = (W - L - R - 38) / slots;
+  const top = Math.log10(Math.max.apply(null, bars.map(b => b.p75)) * 1.15);
+  const bot = Math.log10(Math.min.apply(null, bars.map(b => b.med)) * 0.7);
+  const bw = (W - L - R) / st.shelf.buckets;
   const yv = v => H - B - (Math.log10(v) - bot) / (top - bot) * (H - T - B);
-  [300, 1000, 3000, 10000, 30000, 100000].forEach(function (v) {
+  [300, 500, 1000, 2000, 5000].forEach(function (v) {
     const lv = Math.log10(v);
     if (lv < bot || lv > top) return;
-    svgShelf.appendChild(el("line", {class: "g", x1: L + 34, y1: yv(v).toFixed(1),
+    svgShelf.appendChild(el("line", {class: "g", x1: L, y1: yv(v).toFixed(1),
       x2: W - R, y2: yv(v).toFixed(1)}));
-    svgShelf.appendChild(txt(yLab(v), {class: "ax", x: L + 30, y: (yv(v) + 4).toFixed(1),
+    svgShelf.appendChild(txt(yLab(v), {class: "ax", x: L - 8, y: (yv(v) + 4).toFixed(1),
       "text-anchor": "end"}));
   });
   bars.forEach(function (b) {
-    const h = (Math.log10(b.d) - bot) / (top - bot) * (H - T - B);
-    // k rises WITH age, so k=0 (newest) sits at the LEFT, matching this chart's own
-    // labels and the curve above it. Reversing it put ancient works under "newest".
-    const x = L + 38 + b.k * ((W - L - R - 38) / slots);
+    // k rises WITH age, so k=0 (newest) sits at the LEFT, matching the curve above.
+    const x = L + b.k * bw;
+    const yTop = yv(b.med);
+    svgShelf.appendChild(el("rect", {x: (x + bw * 0.14).toFixed(1), y: yTop.toFixed(1),
+      width: (bw * 0.72).toFixed(1), height: Math.max(1, H - B - yTop).toFixed(1),
+      fill: "var(--c" + band(b.y) + ")", "data-year": b.y}));
+    // a hairline at the 75th percentile, so the bar is not mistaken for the whole story
+    svgShelf.appendChild(el("line", {class: "p75", x1: (x + bw * 0.14).toFixed(1),
+      y1: yv(b.p75).toFixed(1), x2: (x + bw * 0.86).toFixed(1),
+      y2: yv(b.p75).toFixed(1)}));
     const t = D.titles[b.i] || ["?", ""];
-    svgShelf.appendChild(el("rect", {x: (x + bw * 0.15).toFixed(1),
-      y: (H - B - h).toFixed(1), width: (bw * 0.7).toFixed(1),
-      height: Math.max(1, h).toFixed(1), fill: "var(--c" + band(b.y) + ")",
-      "data-year": b.y}));
-    tipShelf.add(x + bw / 2, H - B - h, t[0],
-      (t[1] ? t[1] + DOT : "") + yrLab(b.y) + DOT + fmt(b.d) + " readers a month");
+    tipShelf.add(x + bw / 2, yTop,
+      fmt(b.lo) + " to " + fmt(b.hi) + " years old",
+      "median " + fmt(b.med) + " readers a month" + DOT + "upper quartile "
+      + fmt(b.p75) + DOT + fmt(b.n) + " books" + DOT + "best known: " + t[0]);
   });
-  svgShelf.appendChild(el("line", {class: "g", x1: L + 38, y1: H - B + 4, x2: W - R,
+  svgShelf.appendChild(el("line", {class: "g", x1: L, y1: H - B + 4, x2: W - R,
     y2: H - B + 4}));
-  svgShelf.appendChild(txt("NEWEST", {class: "axl", x: L + 40, y: H - 10}));
-  svgShelf.appendChild(txt("HEIGHT = READERS A MONTH", {class: "axl", x: W / 2, y: H - 10,
-    "text-anchor": "middle"}));
+  svgShelf.appendChild(txt("NEWEST", {class: "axl", x: L + 2, y: H - 10}));
+  svgShelf.appendChild(txt("MEDIAN READERS A MONTH, EQUAL-SIZED AGE GROUPS",
+    {class: "axl", x: W / 2, y: H - 10, "text-anchor": "middle"}));
   svgShelf.appendChild(txt("OLDEST", {class: "axl", x: W - R - 2, y: H - 10,
     "text-anchor": "end"}));
 }

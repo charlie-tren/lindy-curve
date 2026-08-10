@@ -157,25 +157,42 @@ def intern_title(t, au):
     return _TIDX[key]
 
 
-def shelf(rows, slots=64):
-    """One bar per equal step of log age: the most-read work in that step.
+def shelf(rows, buckets=20):
+    """Median readership per EQUAL-COUNT age bucket.
 
-    This is the chart Charlie picked the design from - height is readership, position is
-    age, so it reads as a shelf. A skyline of the best-known work per slot rather than a
-    mean, because a mean over 67k works is flat everywhere and says nothing.
+    This used to plot the single most-read work in each slot of log age, which was a
+    maximum rather than an average: every bar was set by one outlier, so the chart drew
+    the canon instead of the corpus and said nothing about whether age predicts
+    readership. It also made the ancient end look mighty, because the only ancient works
+    Gutenberg holds are famous ones.
+
+    Equal-count buckets rather than equal-width ones, because ages are wildly skewed -
+    fixed decades would give 3,000 works to the 1800s and one to the 1300s, and the thin
+    bars would swing on noise. Every bar here rests on the same number of books, so their
+    heights are comparable, which is the whole point of putting them side by side.
     """
-    ages = [math.log10(r["a"]) for r in rows]
-    lo, hi = min(ages), max(ages)
-    best = {}
-    for r, a in zip(rows, ages):
-        k = min(slots - 1, int((a - lo) / (hi - lo) * slots))
-        if r["d"] > best.get(k, {"d": -1})["d"]:
-            best[k] = r
-    return {"lo": lo, "hi": hi, "slots": slots,
-            "bars": [{"k": k, "d": best[k]["d"], "y": best[k]["y"],
-                      "i": intern_title(best[k]["t"][:95],
-                                        best[k]["au"].split(",")[0][:30])}
-                     for k in sorted(best)]}
+    ordered = sorted(rows, key=lambda r: r["a"])
+    n = len(ordered)
+    size = max(1, n // buckets)
+    out = []
+    for i in range(buckets):
+        chunk = ordered[i * size:(i + 1) * size if i < buckets - 1 else n]
+        if len(chunk) < 20:
+            continue
+        dls = sorted(r["d"] for r in chunk)
+        top = max(chunk, key=lambda r: r["d"])
+        out.append({
+            "k": i,
+            "med": round(statistics.median(dls)),
+            "p75": dls[int(len(dls) * .75)],
+            "n": len(chunk),
+            "lo": min(r["a"] for r in chunk),
+            "hi": max(r["a"] for r in chunk),
+            "y": statistics.median([r["y"] for r in chunk]),
+            "i": intern_title(top["t"][:95], top["au"].split(",")[0][:30]),
+            "topd": top["d"],
+        })
+    return {"buckets": buckets, "bars": out}
 
 
 def callouts(rows):
