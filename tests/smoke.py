@@ -249,7 +249,7 @@ def main():
                 }""")
                 check(sh["n"] >= 20 and sh["n"] <= 30,
                       f"{tag}: {sh['n']} shelf bars, expected one per century (~26)")
-                check("Books Still Read, Per Century" in pg.inner_text("#v-curve"),
+                check("Books still read, per century" in pg.inner_text("#v-curve"),
                       f"{tag}: the shelf does not say what it is counting")
                 # changing the readership bar must change the bar heights, not just a label
                 if w >= 1280:

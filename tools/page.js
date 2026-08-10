@@ -176,8 +176,6 @@ function shelf(st) {
       + DOT + "best known: " + t[0]);
   });
   svgShelf.appendChild(el("line", {class: "g", x1: L, y1: H - B, x2: W - R, y2: H - B}));
-  svgShelf.appendChild(txt("Books Still Read, Per Century",
-    {class: "hdl", x: L, y: T - 2}));
   const smid = (T + (H - B)) / 2;
   svgShelf.appendChild(txt("BOOKS  (LOG)", {class: "axl", x: 13, y: smid,
     "text-anchor": "middle", transform: "rotate(-90 13 " + smid + ")"}));

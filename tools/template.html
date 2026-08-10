@@ -60,7 +60,7 @@ nav button:hover{color:var(--ink)}
 .lede b{color:var(--ink);font-weight:400}
 h2{font:700 clamp(1rem,2.2vw,1.15rem)/1.2 var(--disp);letter-spacing:.15em;
    text-transform:uppercase;margin:0}
-h3{font:400 1.15rem/1.25 var(--body);margin:0}
+h3{font:400 1.16rem/1.25 var(--body);margin:0;letter-spacing:-.005em}
 p{margin:0;max-width:66ch}
 .sub{font-size:.93rem;color:var(--dim)}
 .k{font:400 .78rem/1.5 var(--mono);letter-spacing:.04em;color:var(--dim)}
@@ -89,7 +89,7 @@ summary{cursor:pointer;font:700 12px/1.5 var(--disp);letter-spacing:.15em;
         text-transform:uppercase;color:var(--gilt)}
 details p{margin-top:.7rem;font-size:.93rem;color:var(--dim)}
 details p b{color:var(--ink)}
-.method{margin-top:2.6rem}
+.method{margin-top:2.4rem}
 .method>p{margin-top:.7rem;font-size:.92rem;color:var(--dim);max-width:70ch}
 .method>p b{color:var(--ink);font-weight:400}
 a.back{text-decoration:none;display:inline-flex;align-items:center;gap:.4rem}
@@ -119,8 +119,8 @@ a.back:hover .arw{transform:translateX(-4px)}
   background-position:calc(100% - 14px) 55%,calc(100% - 9px) 55%;
   background-size:5px 5px,5px 5px;background-repeat:no-repeat}
 .filters select:hover{border-color:var(--gilt)}
-.fcount{font:400 .74rem/1 var(--mono);color:var(--faint);margin-left:auto;
-  align-self:flex-end;padding-bottom:.5rem}
+.fcount{font:400 .78rem/1.5 var(--mono);letter-spacing:.04em;color:var(--faint);
+  margin-left:auto;align-self:flex-end;padding-bottom:.4rem}
 .zoomhint{font:400 .78rem/1.5 var(--mono);color:var(--faint)}
 figure svg{user-select:none;-webkit-user-select:none}
 #scatter,#wiki{cursor:crosshair;touch-action:none}
@@ -177,9 +177,11 @@ that survivors keep surviving can be checked. Here are %%WORKS%% books, by age.<
 
 <!-- ============================================================ the curve -->
 <section class="view" id="v-curve">
+  <h2>The shape the effect predicts</h2>
 
   <figure id="herowrap">%%HERO%%<div class="tip" id="tip6"></div></figure>
 
+  <h3>Books still read, per century</h3>
   <div class="filters">
     <label><span>Books read more than</span><select id="f-thresh">
       <option value="200" selected>200 times a month</option>
@@ -230,10 +232,10 @@ that survivors keep surviving can be checked. Here are %%WORKS%% books, by age.<
 
 <section class="view" id="v-wiki">
   <h2>Average yearly Wikipedia page views</h2>
-  <p class="k" id="wnote"></p>
   <figure id="wikiwrap"><svg id="wiki" viewBox="0 0 960 420" role="img"
     aria-label="Wikipedia pageviews a year against age, for well-known works"></svg>
     <div class="tip" id="tip5"></div></figure>
+  <p class="k" id="wnote"></p>
 </section>
 
 <details class="method">

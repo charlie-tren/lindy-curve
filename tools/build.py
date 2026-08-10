@@ -80,8 +80,6 @@ def hero_svg(callouts, w=960, h=340):
     o.append(f'<text class="axl" transform="rotate(-90 {L - 22} {(T + h - B) / 2:.0f})" '
              f'x="{L - 22}" y="{(T + h - B) / 2:.0f}" text-anchor="middle">'
              'NO. BOOKS STILL BEING READ</text>')
-    o.append(f'<text class="hdl" x="{L}" y="{T - 16}">'
-             'The Shape the Effect Predicts</text>')
     o.append("</svg>")
     return "\n".join(o)
 
