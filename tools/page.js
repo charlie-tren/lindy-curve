@@ -128,7 +128,7 @@ if (svgHero && document.getElementById("tip6")) {
 const svgShelf = document.getElementById("shelf");
 const tipShelf = tipper("tip3", svgShelf);
 const SH = {W: 960, H: 280};
-let thresh = "0";
+let thresh = "200";
 function shelf(st) {
   clear(svgShelf);
   tipShelf.reset();
@@ -364,10 +364,9 @@ function scatter() {
   const note = document.getElementById("scatnote");
   if (note) note.textContent =
     "The " + fmt(D.scatter.meta.kept) + " most-read works of " + fmt(D.scatter.meta.of)
-    + " - everything read more than " + fmt(D.scatter.meta.floor)
-    + " times a month. A truncated sample, so it shows where the well-read books are, "
-    + "not the corpus's real density." + DOT + fmt(shown) + " in view"
-    + (z > 1.05 ? DOT + "zoomed " + z.toFixed(1) + "x" : "") + ".";
+    + ", so everything above " + fmt(D.scatter.meta.floor) + " a month - a truncated "
+    + "sample, not the corpus's real density."
+    + (z > 1.05 ? DOT + "zoomed " + z.toFixed(1) + "x" : "");
 }
 
 svgScatter.addEventListener("wheel", function (ev) {

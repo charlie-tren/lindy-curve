@@ -100,7 +100,7 @@ a.back:hover .arw{transform:translateX(-4px)}
 .tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;
   background:var(--ground);border:1px solid var(--rule);padding:6px 9px;
   font:400 12px/1.42 var(--body);color:var(--ink);width:max-content;
-  max-width:300px;z-index:5;
+  max-width:400px;z-index:5;
   box-shadow:0 6px 18px -10px rgba(0,0,0,.6)}
 .tip.on{opacity:1}
 .tip b{display:block;font-weight:400;color:var(--gilt)}
@@ -181,8 +181,7 @@ that survivors keep surviving can be checked. Here are %%WORKS%% books, by age.<
 
   <div class="filters">
     <label><span>Books read more than</span><select id="f-thresh">
-      <option value="0" selected>any number of times</option>
-      <option value="200">200 times a month</option>
+      <option value="200" selected>200 times a month</option>
       <option value="600">600 times a month</option>
       <option value="1000">1,000 times a month</option>
       <option value="2000">2,000 times a month</option>
@@ -198,26 +197,20 @@ that survivors keep surviving can be checked. Here are %%WORKS%% books, by age.<
 
   <details class="method">
     <summary>What this cannot show</summary>
-    <p><b>The books that died are missing.</b> A catalogue of survivors holds no failures.
-    All %%ANCIENT%% works over five hundred years old are here because someone chose to
-    digitise them, so the ancient end is pre-selected for endurance in a way the 1900s is
-    not. That alone is reason not to read a verdict off these charts.</p>
-    <p><b>Dates are the author's, not the work's.</b> Gutenberg publishes no publication
-    date, so they come from the author's lifespan, capped at birth plus fifty.</p>
-    <p><b>The readership count is a rolling thirty days, and it has a floor.</b>
-    %%BASELINE%%% of the corpus sits between 300 and 600 a month, far too uniform across
-    %%UNDER600%% mostly obscure works to be human readership, and Gutenberg does not
-    document what it is. Raise the bar on the second chart above 600 and you are past it.</p>
-    <p><b>Public domain only</b>, so nothing after 1929 - which is where most forgetting
-    actually happens. %%MEDIEVAL%% works span 500 to 1300 AD against %%C19%% from the 1800s
-    alone, and %%ENSHARE%%% is English. Editions and translations of one work are separate
-    records, which splits its readers across several entries.</p>
-    <p><b>The Wikipedia figures are worse on all of this, not better.</b> Only the works
-    canonical enough to have an article can be matched at all, so that chart concentrates
-    the same survivorship bias rather than escaping it.</p>
-    <p>Built from one request to Gutenberg's RDF feed plus its catalogue CSV for subjects,
-    computed at build time, Spearman with tie correction because the floor creates tens of
-    thousands of ties. Rebuilt weekly. Source on
+    <p><b>The books that died are missing.</b> All %%ANCIENT%% works over five hundred
+    years old are here because someone chose to digitise them, so the ancient end is
+    pre-selected for endurance. That alone is reason not to read a verdict off these
+    charts.</p>
+    <p><b>Dates are the author's, not the work's</b> - capped at birth plus fifty, because
+    Gutenberg publishes no publication date.</p>
+    <p><b>The count has an undocumented floor</b>: %%BASELINE%%% of the corpus sits between
+    300 and 600 a month, too uniform to be readers.</p>
+    <p><b>Public domain only</b>, so nothing after 1929, %%ENSHARE%%% English, and editions
+    of one work count separately.</p>
+    <p><b>Wikipedia is worse on all of this</b> - only canonical works have an article, so
+    that chart concentrates the bias rather than escaping it.</p>
+    <p>Gutenberg's RDF feed and catalogue CSV, computed at build time, Spearman with tie
+    correction. Source on
     <a href="https://github.com/charlie-tren/lindy-curve">GitHub</a>.</p>
   </details>
 </section>

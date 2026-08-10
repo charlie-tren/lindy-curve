@@ -144,8 +144,8 @@ def scatter(rows, cap=10000):
     keep = sorted(rows, key=lambda r: -r["d"])[:cap]
     keep.sort(key=lambda r: r["id"])
     floor = min(r["d"] for r in keep) if keep else 0
-    return ([{"a": r["a"], "d": r["d"], "t": r["t"][:44], "l": r["l"], "s": r["s"],
-              "au": r["au"].split(",")[0][:20]} for r in keep],
+    return ([{"a": r["a"], "d": r["d"], "t": r["t"][:80], "l": r["l"], "s": r["s"],
+              "au": r["au"].split(",")[0][:28]} for r in keep],
             {"kept": len(keep), "of": len(rows), "topn": True, "floor": floor})
 
 

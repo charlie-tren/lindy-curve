@@ -64,12 +64,13 @@ def hero_svg(callouts, w=960, h=340):
         o.append(f'<text class="mkl" x="{x:.1f}" y="{y + dy:.1f}" '
                  f'text-anchor="{anchor}">{c["n"]}</text>')
 
-    tx = L + 0.56 * (w - L - R)
-    o.append(f'<text class="note" x="{tx:.0f}" y="{f2y(0.56) - 58:.1f}">'
+    tx = L + 0.66 * (w - L - R)
+    o.append(f'<text class="note" x="{tx:.0f}" y="{f2y(0.66) - 62:.1f}">'
              'where great ideas live</text>')
     # the leader has to end ON the curve - it pointed off into empty space before
-    o.append(f'<line class="lead" x1="{tx + 30:.0f}" y1="{f2y(0.56) - 50:.1f}" '
-             f'x2="{L + 0.72 * (w - L - R):.0f}" y2="{f2y(0.72) - 4:.1f}"/>')
+    # ends BELOW the curve, inside the shaded area, rather than hovering above it
+    o.append(f'<line class="lead" x1="{tx + 34:.0f}" y1="{f2y(0.66) - 54:.1f}" '
+             f'x2="{L + 0.80 * (w - L - R):.0f}" y2="{f2y(0.80) + 22:.1f}"/>')
     o.append(f'<line class="g" x1="{L}" y1="{h - B}" x2="{w - R}" y2="{h - B}"/>')
     o.append(f'<text class="axl" x="{L}" y="{h - B + 20}">NEWER</text>')
     o.append(f'<text class="axl" x="{w - R}" y="{h - B + 20}" '
