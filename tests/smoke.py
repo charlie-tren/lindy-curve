@@ -92,7 +92,7 @@ def main():
                           f"{tag}: AXIS INVERTED - oldest work '{pos['name']}' "
                           f"({max_age}yrs) at x={pos['x']:.0f} of {pos['w']}, "
                           "should be past halfway in the flat tail")
-                check(pg.locator("#v-curve text", has_text="STILL READ").count() > 0,
+                check(pg.locator("#v-curve text", has_text="READERS A MONTH").count() > 0,
                       f"{tag}: hero has no y-axis label")
 
                 # SAME GUARD ON THE SHELF. Age rises to the right there too, and the
@@ -144,6 +144,8 @@ def main():
                 check(wk > 200, f"{tag}: Wikipedia chart has {wk} points, expected 200+")
                 # the match rate must be stated - the chart's slope is mostly a matching
                 # artefact, so publishing it without the caveat would be a false claim
+                check("most-read works of" in pg.inner_text("#v-scatter"),
+                      f"{tag}: the dot plot does not say it is a truncated sample")
                 check("matched to an article" in pg.inner_text("#v-wiki"),
                       f"{tag}: the Wikipedia match rate is not disclosed on the page")
                 check("slider" not in pg.inner_text(".method"),

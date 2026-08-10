@@ -125,26 +125,28 @@ def ridge(rows, bins=26, lo=2.3, hi=5.3, min_n=12):
     return {"lo": lo, "hi": hi, "bins": bins, "rows": out}
 
 
-def scatter(rows, cap=9000):
-    """Decimated for the browser on ONE uniform stride, deterministically.
+def scatter(rows, cap=10000):
+    """The 10,000 most-read works.
 
-    The first version kept every work above 1,500 downloads and only every 94th below
-    it. That put a hard horizontal edge across the plot at exactly 1,500 - a visitor
-    would read it as real structure in the data when it was purely an artefact of how I
-    sampled. A single stride over the whole corpus keeps density proportional
-    everywhere, which costs some of the interesting upper tail; the named works are
-    drawn separately on top, so nothing recognisable is lost.
+    Charlie's call, and it is a trade rather than a free win, so the page states it.
 
-    Sorted by Gutenberg id rather than downloads so the stride is not correlated with
-    the thing being plotted, and reproducible so a rebuild does not reshuffle the cloud.
+    WHAT IT BUYS: every point is a book whose download number means something. The
+    baseline band - 61.5% of the corpus sitting between 300 and 600 a month, too uniform
+    to be readers - is below the cut, so the plot stops being dominated by a blob that
+    is probably not human behaviour at all.
+
+    WHAT IT COSTS: this is a truncated sample, and truncation is exactly what made the
+    headline correlation unstable in the first place (+0.110 over everything, -0.104 once
+    a floor was raised, back across zero above that). A top-N-by-readers plot cannot show
+    the corpus's real density, and its fitted slope is not the corpus's slope. The chart
+    therefore says how many works it holds and out of how many.
     """
-    ordered = sorted(rows, key=lambda r: r["id"])
-    stride = max(1, len(ordered) // cap)
-    keep = ordered[::stride]
+    keep = sorted(rows, key=lambda r: -r["d"])[:cap]
+    keep.sort(key=lambda r: r["id"])
+    floor = min(r["d"] for r in keep) if keep else 0
     return ([{"a": r["a"], "d": r["d"], "t": r["t"][:44], "l": r["l"], "s": r["s"],
               "au": r["au"].split(",")[0][:20]} for r in keep],
-            {"kept": len(keep), "of": len(rows), "stride": stride,
-             "uniform": True})
+            {"kept": len(keep), "of": len(rows), "topn": True, "floor": floor})
 
 
 TITLES = []

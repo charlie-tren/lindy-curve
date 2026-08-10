@@ -299,7 +299,7 @@ function furniture() {
     if (inEra(p)) fp.push([Math.log10(p.a), Math.log10(p.d)]);
   });
   drawFit(svgScatter, fitLine(fp), view.x0, view.x1, spx, spy, SC.W - SC.R - 4, SC.T + 4);
-  svgScatter.appendChild(txt("EVERY BOOK: AGE AGAINST READERS A MONTH",
+  svgScatter.appendChild(txt("THE 10,000 MOST-READ BOOKS: AGE AGAINST READERS A MONTH",
     {class: "axl", x: SC.L, y: SC.T - 8}));
   svgScatter.appendChild(txt("AGE IN YEARS", {class: "axl",
     x: (SC.L + (SC.W - SC.R)) / 2, y: SC.H - 8, "text-anchor": "middle"}));
@@ -360,8 +360,10 @@ function scatter() {
     + (z > 1.05 ? DOT + "zoomed " + z.toFixed(1) + "x" : "");
   const note = document.getElementById("scatnote");
   if (note) note.textContent =
-    "Every " + D.scatter.meta.stride + "th work, " + fmt(D.scatter.meta.kept) + " of "
-    + fmt(D.scatter.meta.of) + DOT + fmt(shown) + " in view"
+    "The " + fmt(D.scatter.meta.kept) + " most-read works of " + fmt(D.scatter.meta.of)
+    + " - everything read more than " + fmt(D.scatter.meta.floor)
+    + " times a month. A truncated sample, so it shows where the well-read books are, "
+    + "not the corpus's real density." + DOT + fmt(shown) + " in view"
     + (z > 1.05 ? DOT + "zoomed " + z.toFixed(1) + "x" : "") + ".";
 }
 
