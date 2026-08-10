@@ -199,8 +199,11 @@ svgShelf.addEventListener("pointerleave", function () { tipShelf.hide(); });
 
 /* --------------------------------------------- scatter: zoom, pan and hover */
 const SC = {W: 960, H: 470, L: 58, R: 122, T: 26, B: 52};
+/* The plot holds only the 10,000 most-read works, so there is nothing below about 766
+   a month. Panning under 1,000 just showed empty space, so the view is clamped there. */
+const YFLOOR = Math.log10(1000);
 const HOME = {x0: Math.log10(5), x1: Math.log10(3200),
-              y0: Math.log10(60), y1: Math.log10(200000)};
+              y0: YFLOOR, y1: Math.log10(200000)};
 let view = Object.assign({}, HOME);
 const svgScatter = document.getElementById("scatter");
 const tipScatter = tipper("tip", svgScatter);
@@ -302,7 +305,7 @@ function furniture() {
     if (inEra(p)) fp.push([Math.log10(p.a), Math.log10(p.d)]);
   });
   drawFit(svgScatter, fitLine(fp), view.x0, view.x1, spx, spy, SC.W - SC.R - 4, SC.T + 4);
-  svgScatter.appendChild(txt("THE 10,000 MOST-READ BOOKS: AGE AGAINST READERS A MONTH",
+  svgScatter.appendChild(txt("AGE AGAINST READERS A MONTH",
     {class: "axl", x: SC.L, y: SC.T - 8}));
   svgScatter.appendChild(txt("AGE IN YEARS", {class: "axl",
     x: (SC.L + (SC.W - SC.R)) / 2, y: SC.H - 8, "text-anchor": "middle"}));
@@ -385,6 +388,13 @@ svgScatter.addEventListener("wheel", function (ev) {
   scatterSoon();
 }, {passive: false});
 
+function clampView() {
+  if (view.y0 < YFLOOR) {
+    const h = view.y1 - view.y0;
+    view.y0 = YFLOOR;
+    view.y1 = YFLOOR + h;
+  }
+}
 let dragging = null;
 svgScatter.addEventListener("pointerdown", function (ev) {
   ev.preventDefault();                // stops a drag becoming a page text selection
@@ -408,6 +418,7 @@ svgScatter.addEventListener("pointermove", function (ev) {
              * (dragging.v.y1 - dragging.v.y0);
     view = {x0: dragging.v.x0 - dx, x1: dragging.v.x1 - dx,
             y0: dragging.v.y0 + dy, y1: dragging.v.y1 + dy};
+    clampView();
     // A pan is a pure translation, so shifting the group is exact AND costs one
     // attribute write instead of repositioning every circle. Axes redraw on the frame;
     // the cloud snaps back to real coordinates when the drag ends.

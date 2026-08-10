@@ -1,7 +1,7 @@
-# The Lindy Curve
+# The Lindy Effect
 
 Every book on Project Gutenberg plotted by age against how much it is being read right
-now. Live at **https://charlietrenorden.com/lindy-curve/**
+now. Live at **https://charlietrenorden.com/lindy-effect/**
 
 The Lindy effect says that for things which do not perish, age is evidence of staying
 power. Books are the cleanest available test, because Gutenberg publishes a download

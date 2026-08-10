@@ -57,7 +57,7 @@ def hero_svg(callouts, w=960, h=340):
     for i, (c, a) in enumerate(zip(picks, ages)):
         f = 0.05 + (a - lo) / (hi - lo) * 0.90
         x, y = L + f * (w - L - R), f2y(f)
-        dy = -13 if i % 2 == 0 else 19
+        dy = -15 if i % 2 == 0 else 24
         anchor = "end" if i == len(picks) - 1 else "middle"
         o.append(f'<circle class="mk" cx="{x:.1f}" cy="{y:.1f}" r="4.5">'
                  f'<title>{c["t"][:60]} &#183; {c["d"]:,} downloads a month</title></circle>')
@@ -70,16 +70,16 @@ def hero_svg(callouts, w=960, h=340):
     # the leader has to end ON the curve - it pointed off into empty space before
     # ends BELOW the curve, inside the shaded area, rather than hovering above it
     o.append(f'<line class="lead" x1="{tx + 34:.0f}" y1="{f2y(0.66) - 54:.1f}" '
-             f'x2="{L + 0.80 * (w - L - R):.0f}" y2="{f2y(0.80) + 22:.1f}"/>')
+             f'x2="{L + 0.76 * (w - L - R):.0f}" y2="{f2y(0.76) + 8:.1f}"/>')
     o.append(f'<line class="g" x1="{L}" y1="{h - B}" x2="{w - R}" y2="{h - B}"/>')
     o.append(f'<text class="axl" x="{L}" y="{h - B + 20}">NEWER</text>')
     o.append(f'<text class="axl" x="{w - R}" y="{h - B + 20}" '
              'text-anchor="end">OLDER</text>')
     o.append(f'<text class="axl" transform="rotate(-90 {L - 22} {(T + h - B) / 2:.0f})" '
              f'x="{L - 22}" y="{(T + h - B) / 2:.0f}" text-anchor="middle">'
-             'BOOKS STILL READ</text>')
-    o.append(f'<text class="axl" x="{L}" y="{T - 14}">'
-             'THE PREDICTION, NOT THE DATA</text>')
+             'NO. BOOKS STILL BEING READ</text>')
+    o.append(f'<text class="hdl" x="{L}" y="{T - 16}">'
+             'The shape the effect predicts</text>')
     o.append("</svg>")
     return "\n".join(o)
 

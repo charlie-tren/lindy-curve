@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Lindy Curve - does an old book stay read?</title>
+<title>The Lindy Effect - does an old book stay read?</title>
 <meta name="description" content="Every book on Project Gutenberg plotted by age against how much it is read this month. The classic Lindy curve says old ideas endure. 67,488 works say age predicts almost nothing - and the reason is worth seeing.">
-<link rel="canonical" href="https://charlietrenorden.com/lindy-curve/">
+<link rel="canonical" href="https://charlietrenorden.com/lindy-effect/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="The Lindy Curve">
-<meta property="og:url" content="https://charlietrenorden.com/lindy-curve/">
+<meta property="og:title" content="The Lindy Effect">
+<meta property="og:url" content="https://charlietrenorden.com/lindy-effect/">
 <meta property="og:description" content="Every book on Project Gutenberg plotted by age against how much it is read this month. The classic Lindy curve says old ideas endure. 67,488 works say age predicts almost nothing - and the reason is worth seeing.">
-<meta property="og:image" content="https://charlietrenorden.com/lindy-curve/og.png">
+<meta property="og:image" content="https://charlietrenorden.com/lindy-effect/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231B1611'/><path d='M4 8 C10 20 18 25 28 26' fill='none' stroke='%23C9A961' stroke-width='2.6'/></svg>">
 <style>
@@ -132,6 +132,7 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
 .g{stroke:var(--rule);stroke-width:1}
 .ax{font:400 10px var(--mono);fill:var(--dim)}
 .axl{font:700 9px var(--disp);letter-spacing:.16em;fill:var(--dim)}
+.hdl{font:400 19px var(--body);fill:var(--ink);letter-spacing:-.01em}
 .sp{stroke-width:0}
 .cv{fill:none;stroke:var(--gilt);stroke-width:2.2}
 .cvf{fill:var(--gilt);opacity:.09}
@@ -165,7 +166,7 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
 <div class="wrap">
 
 <header class="mast">
-  <span class="wm">The Lindy Curve</span>
+  <span class="wm">The Lindy Effect</span>
   <button class="tog" id="tog" type="button" aria-label="Switch to the dark theme">
     <span class="dot"></span><span id="togl">Dark</span></button>
 </header>
@@ -211,12 +212,13 @@ that survivors keep surviving can be checked. Here are %%WORKS%% books, by age.<
     that chart concentrates the bias rather than escaping it.</p>
     <p>Gutenberg's RDF feed and catalogue CSV, computed at build time, Spearman with tie
     correction. Source on
-    <a href="https://github.com/charlie-tren/lindy-curve">GitHub</a>.</p>
+    <a href="https://github.com/charlie-tren/lindy-effect">GitHub</a>.</p>
   </details>
 </section>
 
 <!-- =========================================================== the scatter -->
 <section class="view" id="v-scatter">
+  <h2>Every well-read book, by age</h2>
   <div class="filters">
     <label><span>Era</span><select id="f-era">
       <option value="all">Everything</option><option value="anc">Before 1500</option>

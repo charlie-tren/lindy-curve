@@ -92,7 +92,7 @@ def main():
                           f"{tag}: AXIS INVERTED - oldest work '{pos['name']}' "
                           f"({max_age}yrs) at x={pos['x']:.0f} of {pos['w']}, "
                           "should be past halfway in the flat tail")
-                check(pg.locator("#v-curve text", has_text="BOOKS STILL READ").count() > 0,
+                check(pg.locator("#v-curve text", has_text="NO. BOOKS STILL BEING READ").count() > 0,
                       f"{tag}: hero has no y-axis label")
 
                 # SAME GUARD ON THE SHELF. Age rises to the right there too, and the
