@@ -134,8 +134,8 @@ def main():
                 # the methodology must appear once, on the first view only
                 check(pg.locator(".method").count() == 1,
                       f"{tag}: {pg.locator('.method').count()} methodology blocks, expected 1")
-                check(pg.locator("#v-curve .method").count() == 1,
-                      f"{tag}: the methodology is not inside the curve view")
+                check(pg.locator("#v-curve .method").count() == 0,
+                      f"{tag}: the methodology should sit at the foot of the page")
                 check(pg.locator('[role="tab"]').count() == 0,
                       f"{tag}: tabs still present - the page is meant to be one page")
                 check(pg.locator("#floor").count() == 0,
@@ -148,6 +148,8 @@ def main():
                       f"{tag}: the dot plot does not say it is a truncated sample")
                 check("matched to an article" in pg.inner_text("#v-wiki"),
                       f"{tag}: the Wikipedia match rate is not disclosed on the page")
+                check(pg.locator("#v-curve svg title").count() == 0,
+                      f"{tag}: hero marks still carry native <title> tooltips")
                 check("slider" not in pg.inner_text(".method"),
                       f"{tag}: the methodology still mentions the removed slider")
                 check(pg.inner_text("#wnote").strip(),
@@ -247,7 +249,7 @@ def main():
                 }""")
                 check(sh["n"] >= 20 and sh["n"] <= 30,
                       f"{tag}: {sh['n']} shelf bars, expected one per century (~26)")
-                check("BOOKS STILL READ, PER CENTURY" in pg.inner_text("#v-curve"),
+                check("Books Still Read, Per Century" in pg.inner_text("#v-curve"),
                       f"{tag}: the shelf does not say what it is counting")
                 # changing the readership bar must change the bar heights, not just a label
                 if w >= 1280:

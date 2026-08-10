@@ -85,11 +85,11 @@ td{font-variant-numeric:tabular-nums}
 
 
 details{border-top:1px solid var(--rule);padding-top:.8rem}
-summary{cursor:pointer;font:700 10px/1.5 var(--disp);letter-spacing:.15em;
+summary{cursor:pointer;font:700 12px/1.5 var(--disp);letter-spacing:.15em;
         text-transform:uppercase;color:var(--gilt)}
 details p{margin-top:.7rem;font-size:.93rem;color:var(--dim)}
 details p b{color:var(--ink)}
-.method{margin-top:.4rem}
+.method{margin-top:2.6rem}
 .method>p{margin-top:.7rem;font-size:.92rem;color:var(--dim);max-width:70ch}
 .method>p b{color:var(--ink);font-weight:400}
 a.back{text-decoration:none;display:inline-flex;align-items:center;gap:.4rem}
@@ -196,24 +196,7 @@ that survivors keep surviving can be checked. Here are %%WORKS%% books, by age.<
 
 
 
-  <details class="method">
-    <summary>What this cannot show</summary>
-    <p><b>The books that died are missing.</b> All %%ANCIENT%% works over five hundred
-    years old are here because someone chose to digitise them, so the ancient end is
-    pre-selected for endurance. That alone is reason not to read a verdict off these
-    charts.</p>
-    <p><b>Dates are the author's, not the work's</b> - capped at birth plus fifty, because
-    Gutenberg publishes no publication date.</p>
-    <p><b>The count has an undocumented floor</b>: %%BASELINE%%% of the corpus sits between
-    300 and 600 a month, too uniform to be readers.</p>
-    <p><b>Public domain only</b>, so nothing after 1929, %%ENSHARE%%% English, and editions
-    of one work count separately.</p>
-    <p><b>Wikipedia is worse on all of this</b> - only canonical works have an article, so
-    that chart concentrates the bias rather than escaping it.</p>
-    <p>Gutenberg's RDF feed and catalogue CSV, computed at build time, Spearman with tie
-    correction. Source on
-    <a href="https://github.com/charlie-tren/lindy-effect">GitHub</a>.</p>
-  </details>
+
 </section>
 
 <!-- =========================================================== the scatter -->
@@ -252,6 +235,19 @@ that survivors keep surviving can be checked. Here are %%WORKS%% books, by age.<
     aria-label="Wikipedia pageviews a year against age, for well-known works"></svg>
     <div class="tip" id="tip5"></div></figure>
 </section>
+
+<details class="method">
+  <summary>What this cannot show</summary>
+  <p><b>Dates are the author's, not the work's</b> - capped at birth plus fifty, because
+  Gutenberg publishes no publication date.</p>
+  <p><b>The count has an undocumented floor</b>: %%BASELINE%%% of the corpus sits between
+  300 and 600 a month, too uniform to be readers.</p>
+  <p><b>Public domain only</b>, so nothing after 1929, %%ENSHARE%%% English, and editions
+  of one work count separately.</p>
+  <p>Gutenberg's RDF feed and catalogue CSV, computed at build time, Spearman with tie
+  correction. Source on
+  <a href="https://github.com/charlie-tren/lindy-effect">GitHub</a>.</p>
+</details>
 
 <footer>
   <a class="back" href="https://charlietrenorden.com/"><span class="arw">&#8592;</span>

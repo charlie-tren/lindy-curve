@@ -112,11 +112,11 @@ if (svgHero && document.getElementById("tip6")) {
   const marks = svgHero.querySelectorAll("circle.mk");
   const labels = svgHero.querySelectorAll("text.mkl");
   for (let i = 0; i < marks.length; i++) {
-    const t = marks[i].querySelector("title");
+    const dl = marks[i].getAttribute("data-dl");
     tipHero.add(+marks[i].getAttribute("cx"), +marks[i].getAttribute("cy"),
-      labels[i] ? labels[i].textContent : "?",
-      t ? t.textContent.replace(/^[^·]*·\s*/, "") : "");
-    if (t) marks[i].removeChild(t);
+      marks[i].getAttribute("data-title")
+        || (labels[i] ? labels[i].textContent : "?"),
+      dl ? dl + " readers a month" : "");
   }
   svgHero.addEventListener("pointermove", function (ev) {
     tipHero.track(userPos(svgHero, ev, HW, HH), HW, HH, 26);
@@ -176,8 +176,8 @@ function shelf(st) {
       + DOT + "best known: " + t[0]);
   });
   svgShelf.appendChild(el("line", {class: "g", x1: L, y1: H - B, x2: W - R, y2: H - B}));
-  svgShelf.appendChild(txt("THE MEASURED VERSION: BOOKS STILL READ, PER CENTURY",
-    {class: "axl", x: L, y: T - 4}));
+  svgShelf.appendChild(txt("Books Still Read, Per Century",
+    {class: "hdl", x: L, y: T - 2}));
   const smid = (T + (H - B)) / 2;
   svgShelf.appendChild(txt("BOOKS  (LOG)", {class: "axl", x: 13, y: smid,
     "text-anchor": "middle", transform: "rotate(-90 13 " + smid + ")"}));
@@ -419,12 +419,17 @@ svgScatter.addEventListener("pointermove", function (ev) {
     view = {x0: dragging.v.x0 - dx, x1: dragging.v.x1 - dx,
             y0: dragging.v.y0 + dy, y1: dragging.v.y1 + dy};
     clampView();
+    /* Derive the shift from the CLAMPED view rather than the raw pointer delta.
+       Clamping the view alone still let the cloud slide past the floor, because the
+       translate was computed from where the mouse went, not where the chart allowed. */
+    const appliedY = (dragging.v.y0 - view.y0) / (dragging.v.y1 - dragging.v.y0)
+                     * (SC.H - SC.T - SC.B);
     // A pan is a pure translation, so shifting the group is exact AND costs one
     // attribute write instead of repositioning every circle. Axes redraw on the frame;
     // the cloud snaps back to real coordinates when the drag ends.
     if (ptsG) ptsG.setAttribute("transform",
       "translate(" + (u.x - dragging.u.x).toFixed(1) + ","
-      + (u.y - dragging.u.y).toFixed(1) + ")");
+      + (-appliedY).toFixed(1) + ")");
     furnitureSoon();
     tipScatter.hide();
     return;

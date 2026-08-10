@@ -59,8 +59,10 @@ def hero_svg(callouts, w=960, h=340):
         x, y = L + f * (w - L - R), f2y(f)
         dy = -15 if i % 2 == 0 else 24
         anchor = "end" if i == len(picks) - 1 else "middle"
-        o.append(f'<circle class="mk" cx="{x:.1f}" cy="{y:.1f}" r="4.5">'
-                 f'<title>{c["t"][:60]} &#183; {c["d"]:,} downloads a month</title></circle>')
+        # the detail rides on data attributes rather than a <title>, which the browser
+        # would show as its own tooltip in the moment before the page script runs
+        o.append(f'<circle class="mk" cx="{x:.1f}" cy="{y:.1f}" r="4.5" '
+                 f'data-title="{c["t"][:70]}" data-dl="{c["d"]:,}"/>')
         o.append(f'<text class="mkl" x="{x:.1f}" y="{y + dy:.1f}" '
                  f'text-anchor="{anchor}">{c["n"]}</text>')
 
@@ -79,7 +81,7 @@ def hero_svg(callouts, w=960, h=340):
              f'x="{L - 22}" y="{(T + h - B) / 2:.0f}" text-anchor="middle">'
              'NO. BOOKS STILL BEING READ</text>')
     o.append(f'<text class="hdl" x="{L}" y="{T - 16}">'
-             'The shape the effect predicts</text>')
+             'The Shape the Effect Predicts</text>')
     o.append("</svg>")
     return "\n".join(o)
 

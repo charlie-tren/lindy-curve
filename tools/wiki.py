@@ -35,7 +35,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "data" / "wiki.json"
 UA = {"User-Agent": "lindy-curve/1.0 (+https://charlietrenorden.com)"}
 START, END = "2016010100", "2026070100"
-TOP_N = 1000         # candidates to try matching; the match rate falls as fame does
+TOP_N = 3000         # ~36% match, so this targets roughly 1,000 matched works
 
 # Matches that search gets wrong in a way scoring cannot catch.
 BLOCK = {"The Bible", "Bible", "Book", "Novel", "Poetry"}
