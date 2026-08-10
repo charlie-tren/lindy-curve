@@ -19,14 +19,16 @@ W, H = 1200, 630
 
 def main():
     page_html = (ROOT / "docs" / "index.html").read_text(encoding="utf-8")
-    hero = re.search(r'<figure>(<svg viewBox="0 0 960 340".*?</svg>)</figure>',
+    # the hero figure gained an id and a tooltip div, which broke the old anchored
+    # pattern - match the svg by its aria-label instead, which is what identifies it
+    hero = re.search(r'(<svg viewBox="0 0 960 \d+" role="img" '
+                     r'aria-label="The classic Lindy curve.*?</svg>)',
                      page_html, re.S)
     if not hero:
         raise SystemExit("could not find the hero svg in docs/index.html")
     derived = json.loads((ROOT / "data" / "derived.json").read_text(encoding="utf-8"))
     works = f"{derived['corpus']['works']:,}"
     rho_all = next(s["rho"] for s in derived["states"] if s["floor"] == 0)
-    rho_1k = min(derived["states"], key=lambda s: s["rho"])
 
     card = f"""<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 :root{{--ground:#1B1611;--ink:#EDE3CE;--dim:#A08F72;--faint:#6E6049;--rule:#3B3125;
@@ -69,10 +71,10 @@ color:var(--faint);border-top:1px solid var(--rule);padding-top:14px}}
   <div class="chart">{hero.group(1)}</div>
   <div class="say">
     <div class="q">Does an old book <b>stay</b> read?</div>
-    <div class="num"><span>{rho_1k['rho']:+.3f}</span>
+    <div class="num"><span>{rho_all:+.3f}</span>
       <span>correlation between<br>age and readers</span></div>
     <div class="q" style="font-size:17px;color:var(--dim);line-height:1.45">
-      {works} works. Move one threshold and the answer changes sign.</div>
+      {works} works, and age predicts almost nothing.</div>
   </div>
 </div>
 <div class="foot">Project Gutenberg &#183; downloads in the last 30 days</div>
@@ -89,8 +91,7 @@ color:var(--faint);border-top:1px solid var(--rule);padding-top:14px}}
         b.close()
 
     print(f"wrote docs/og.png  {dest.stat().st_size / 1024:.0f}KB  {W}x{H}")
-    print(f"  headline rho {rho_1k['rho']:+.3f} at floor {rho_1k['floor']:,} "
-          f"(vs {rho_all:+.3f} with no floor)")
+    print(f"  headline rho {rho_all:+.3f} over the whole corpus")
 
 
 if __name__ == "__main__":
