@@ -340,7 +340,7 @@ def main():
         print(f"{s['floor']:>7,} {s['n']:>7,} {s['rho']:>+8.4f} {s['med']:>7,}  "
               f"{len(s['centuries']):>2}")
     print(f"\nscatter: {meta['kept']:,} points of {meta['of']:,}, "
-          f"one uniform stride of {meta['stride']}")
+          f"floor {meta['floor']:,} a month")
     print(f"callouts: {len(out['callouts'])} named works")
     for c in out["callouts"][:6]:
         print(f"   {c['y']:>6}  {c['d']:>7,}  {c['n']}")
