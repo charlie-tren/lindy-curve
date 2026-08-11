@@ -54,16 +54,26 @@ def hero_svg(callouts, w=960, h=340):
     picks = [usable[i] for i in idx]
     ages = [math.log10(c["a"]) for c in picks]
     lo, hi = min(ages), max(ages)
+    # PLACEMENT. Each label sits as close to its mark as it can while clearing two
+    # things: the curve, and the label before it. Fixed alternating offsets were the
+    # earlier approach and they read as detached - half the labels floated well above a
+    # curve they had no need to avoid. So the gap is derived, not chosen: start at the
+    # minimum that clears the dot, and lift only on an actual collision.
+    # The curve descends left to right, so a label must extend RIGHTWARD from its mark
+    # (a centred label ran its left half through the steeper part above the mark) and sit
+    # above it (below the line is inside the shaded fill).
+    # The lift on collision happens in the browser (see heroLabels in page.js), which
+    # has real text metrics. Estimating character widths here detected only some of the
+    # collisions, and a stale estimate would silently overlap again on the next refresh.
+    GAP = 9.0
     for i, (c, a) in enumerate(zip(picks, ages)):
         f = 0.05 + (a - lo) / (hi - lo) * 0.90
         x, y = L + f * (w - L - R), f2y(f)
-        # The curve only ever descends left to right, so a label must extend RIGHTWARD
-        # from its mark, into the region where the curve is lower, and sit above the
-        # mark. Centring it ran the left half of "Ulysses" straight through the steep
-        # shoulder; putting labels below the line instead put them in the shaded fill.
-        dy = -13 if i % 2 == 0 else -28
-        anchor = "end" if i == len(picks) - 1 else "start"
-        lx = x + (0 if anchor == "end" else 7)
+        last = i == len(picks) - 1
+        anchor = "end" if last else "start"
+        lx = x if last else x + 7
+        dy = -GAP
+
         # the detail rides on data attributes rather than a <title>, which the browser
         # would show as its own tooltip in the moment before the page script runs
         o.append(f'<circle class="mk" cx="{x:.1f}" cy="{y:.1f}" r="4.5" '

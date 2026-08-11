@@ -181,6 +181,12 @@ def main():
                 check(not onc, f"{tag}: hero labels drawn over the curve: {onc}")
                 check(lab["ov"] == 0,
                       f"{tag}: {lab['ov']} hero labels overprint each other")
+                # and the other failure mode: a label so far off the curve it reads as
+                # detached. Fixed alternating offsets put half of them 28px clear; the
+                # only ones allowed past ~26 are those lifted over a neighbour.
+                far = [x["n"] for x in lab["out"] if x["clear"] > 26]
+                check(len(far) <= 2,
+                      f"{tag}: hero labels floating far from the curve: {far}")
                 offr = [x["n"] for x in lab["out"] if x["right"] > lab["w"] - 4]
                 check(not offr, f"{tag}: hero labels run off the right edge: {offr}")
 

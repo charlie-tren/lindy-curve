@@ -33,6 +33,34 @@ setTheme((function () {
 })());
 
 /* ------------------------------------------- one tooltip implementation, four charts */
+// Hero labels: nudge a label up only when it actually runs into one already placed.
+// build.py puts every label at the same small clearance above its mark; the collisions
+// can only be resolved here, where the real rendered text width is known. Fixed
+// alternating offsets were the earlier approach - they left half the labels floating
+// well clear of a curve they never came near, which read as detached.
+function heroLabels() {
+  var svg = document.querySelector("#v-curve svg");
+  if (!svg) return;
+  var boxes = [];
+  [].slice.call(svg.querySelectorAll(".mkl")).forEach(function (t) {
+    var bb = t.getBBox(), lift = 0, hit = true, guard = 0;
+    while (hit && guard++ < 8) {
+      hit = false;
+      for (var i = 0; i < boxes.length; i++) {
+        var b = boxes[i];
+        if (bb.x < b.x + b.width + 4 && b.x < bb.x + bb.width + 4
+            && bb.y - lift < b.y + b.height && b.y < bb.y + bb.height - lift) {
+          // exactly clear of that box, not a fixed step - stepping overshot to 33px
+          lift = bb.y + bb.height - b.y + 2;
+          hit = true;
+        }
+      }
+    }
+    if (lift) t.setAttribute("y", (parseFloat(t.getAttribute("y")) - lift).toFixed(1));
+    boxes.push({x: bb.x, y: bb.y - lift, width: bb.width, height: bb.height});
+  });
+}
+
 function tipper(tipId, svg) {
   const tip = document.getElementById(tipId);
   let hits = [];
@@ -446,6 +474,7 @@ function state() { return ST; }
 
 
 draw();
+heroLabels();
 
 /* --------------------------------- the second opinion: Wikipedia pageviews */
 const svgWiki = document.getElementById("wiki");
