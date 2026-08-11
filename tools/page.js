@@ -38,6 +38,49 @@ setTheme((function () {
 // can only be resolved here, where the real rendered text width is known. Fixed
 // alternating offsets were the earlier approach - they left half the labels floating
 // well clear of a curve they never came near, which read as detached.
+// PINCH TO ZOOM. Zoom was wheel-only, and a touch device never fires wheel, so the dot
+// plots could be panned on a phone but not zoomed at all. touch-action is already none
+// on both, so the browser hands us every touch rather than scrolling the page.
+// Registered AFTER each chart's own pointerdown so cancelDrag() runs once the chart has
+// set its drag state - otherwise the first finger keeps panning through the pinch.
+function pinchZoom(svg, G, zoom, cancelDrag) {
+  const pts = new Map();
+  let base = null;
+  const two = () => {
+    const a = [];
+    pts.forEach(function (v) { a.push(v); });
+    return a;
+  };
+  const gap = () => {
+    const a = two();
+    return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y);
+  };
+  svg.addEventListener("pointerdown", function (ev) {
+    pts.set(ev.pointerId, userPos(svg, ev, G.W, G.H));
+    if (pts.size === 2) {
+      cancelDrag();
+      const a = two();
+      base = {d: gap(), m: {x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2}};
+    }
+  });
+  svg.addEventListener("pointermove", function (ev) {
+    if (!pts.has(ev.pointerId)) return;
+    pts.set(ev.pointerId, userPos(svg, ev, G.W, G.H));
+    if (pts.size !== 2 || !base) return;
+    const d = gap();
+    if (d < 8) return;               // fingers together: the ratio blows up
+    zoom(base.m, base.d / d);
+    base.d = d;                      // incremental, so the anchor stays put
+  });
+  const drop = function (ev) {
+    pts.delete(ev.pointerId);
+    if (pts.size < 2) base = null;
+  };
+  svg.addEventListener("pointerup", drop);
+  svg.addEventListener("pointercancel", drop);
+  svg.addEventListener("pointerleave", drop);
+}
+
 function heroLabels() {
   var svg = document.querySelector("#v-curve svg");
   if (!svg) return;
@@ -398,10 +441,17 @@ function scatter() {
     + (z > 1.05 ? DOT + "zoomed " + z.toFixed(1) + "x" : "");
 }
 
-svgScatter.addEventListener("wheel", function (ev) {
-  ev.preventDefault();
-  const u = userPos(svgScatter, ev, SC.W, SC.H);
-  const k = ev.deltaY > 0 ? 1.18 : 1 / 1.18;
+function clampView() {
+  if (view.y0 < YFLOOR) {
+    const h = view.y1 - view.y0;
+    view.y0 = YFLOOR;
+    view.y1 = YFLOOR + h;
+  }
+}
+// Zoom about a point, shared by the wheel and by pinch on touch. Extracted rather
+// than duplicated: the clamp rules here are the ones that keep the view inside the
+// data, and a second copy would drift away from them.
+function zoomScatter(u, k) {
   const fx = (u.x - SC.L) / (SC.W - SC.L - SC.R);
   const fy = (SC.H - SC.B - u.y) / (SC.H - SC.T - SC.B);
   const ax = view.x0 + fx * (view.x1 - view.x0);
@@ -411,22 +461,20 @@ svgScatter.addEventListener("wheel", function (ev) {
   const h = Math.min(maxH, Math.max(maxH / 40, (view.y1 - view.y0) * k));
   view = {x0: ax - fx * w, x1: ax + (1 - fx) * w,
           y0: ay - fy * h, y1: ay + (1 - fy) * h};
+  clampView();
   scatterSoon();
+}
+svgScatter.addEventListener("wheel", function (ev) {
+  ev.preventDefault();
+  zoomScatter(userPos(svgScatter, ev, SC.W, SC.H), ev.deltaY > 0 ? 1.18 : 1 / 1.18);
 }, {passive: false});
 
-function clampView() {
-  if (view.y0 < YFLOOR) {
-    const h = view.y1 - view.y0;
-    view.y0 = YFLOOR;
-    view.y1 = YFLOOR + h;
-  }
-}
 let dragging = null;
 svgScatter.addEventListener("pointerdown", function (ev) {
   ev.preventDefault();                // stops a drag becoming a page text selection
   dragging = {u: userPos(svgScatter, ev, SC.W, SC.H), v: Object.assign({}, view)};
   svgScatter.classList.add("drag");
-  svgScatter.setPointerCapture(ev.pointerId);
+  try { svgScatter.setPointerCapture(ev.pointerId); } catch (e) {}
 });
 svgScatter.addEventListener("pointerup", function () {
   dragging = null;
@@ -463,6 +511,12 @@ svgScatter.addEventListener("pointermove", function (ev) {
   tipScatter.track(u, SC.W, SC.H, 14);
 });
 svgScatter.addEventListener("pointerleave", function () { tipScatter.hide(); });
+pinchZoom(svgScatter, SC, zoomScatter, function () {
+  dragging = null;
+  svgScatter.classList.remove("drag");
+  if (ptsG) ptsG.setAttribute("transform", "");
+  if (gridG) gridG.setAttribute("transform", "");
+});
 svgScatter.addEventListener("dblclick", function () {
   view = Object.assign({}, HOME);
   scatter();
@@ -545,10 +599,7 @@ function wiki() {
 }
 if (svgWiki) {
   let wDrag = null;
-  svgWiki.addEventListener("wheel", function (ev) {
-    ev.preventDefault();
-    const u = userPos(svgWiki, ev, WK.W, WK.H);
-    const k = ev.deltaY > 0 ? 1.18 : 1 / 1.18;
+  const zoomWiki = function (u, k) {
     const fx = (u.x - WK.L) / (WK.W - WK.L - WK.R);
     const fy = (WK.H - WK.B - u.y) / (WK.H - WK.T - WK.B);
     const ax = wView.x0 + fx * (wView.x1 - wView.x0);
@@ -561,12 +612,16 @@ if (svgWiki) {
     wView = {x0: ax - fx * ww, x1: ax + (1 - fx) * ww,
              y0: ay - fy * hh, y1: ay + (1 - fy) * hh};
     wiki();
+  };
+  svgWiki.addEventListener("wheel", function (ev) {
+    ev.preventDefault();
+    zoomWiki(userPos(svgWiki, ev, WK.W, WK.H), ev.deltaY > 0 ? 1.18 : 1 / 1.18);
   }, {passive: false});
   svgWiki.addEventListener("pointerdown", function (ev) {
     ev.preventDefault();
     wDrag = {u: userPos(svgWiki, ev, WK.W, WK.H), v: Object.assign({}, wView)};
     svgWiki.classList.add("drag");
-    svgWiki.setPointerCapture(ev.pointerId);
+    try { svgWiki.setPointerCapture(ev.pointerId); } catch (e) {}
   });
   svgWiki.addEventListener("pointerup", function () {
     wDrag = null;
@@ -586,6 +641,10 @@ if (svgWiki) {
     tipWiki.track(u, WK.W, WK.H, 14);
   });
   svgWiki.addEventListener("pointerleave", function () { tipWiki.hide(); });
+  pinchZoom(svgWiki, WK, zoomWiki, function () {
+    wDrag = null;
+    svgWiki.classList.remove("drag");
+  });
   svgWiki.addEventListener("dblclick", function () {
     wView = Object.assign({}, wHome);
     wiki();

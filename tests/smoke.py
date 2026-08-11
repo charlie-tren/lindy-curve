@@ -59,7 +59,8 @@ def main():
                                 ("dark", 375, 812)]:
                 tag = f"{theme}/{w}"
                 ctx = b.new_context(viewport={"width": w, "height": h},
-                                    color_scheme=theme)
+                                    color_scheme=theme, has_touch=w < 768,
+                                    is_mobile=w < 768)
                 pg = ctx.new_page()
                 errs = []
                 pg.on("console", lambda m: m.type == "error" and errs.append(m.text))
@@ -385,6 +386,59 @@ def main():
                 print(f"{tag:<12} pts={counts['pts']:<5} bars={counts['bars']:<3} "
                       f"labels={counts['labels']:<3}"
                       f"   {col[0]} on {col[1]}")
+
+                # PINCH TO ZOOM, checked only on the touch context. Zoom was wheel-only
+                # for the whole build and no desktop test could see it: a phone never
+                # fires wheel, so both dot plots panned but could not zoom at all.
+                # Real CDP multi-touch, not synthetic PointerEvents - the point is to
+                # exercise what a finger actually sends.
+                if w < 768:
+                    cdp = ctx.new_cdp_session(pg)
+
+                    def pinch(box, out=True, steps=10):
+                        cx = box["x"] + box["width"] / 2
+                        cy = box["y"] + box["height"] / 2
+                        r0, r1 = (28, 132) if out else (132, 28)
+                        f = lambda r: [{"x": cx - r, "y": cy, "id": 1},
+                                       {"x": cx + r, "y": cy, "id": 2}]
+                        cdp.send("Input.dispatchTouchEvent",
+                                 {"type": "touchStart", "touchPoints": f(r0)})
+                        for i in range(1, steps + 1):
+                            cdp.send("Input.dispatchTouchEvent",
+                                     {"type": "touchMove",
+                                      "touchPoints": f(r0 + (r1 - r0) * i / steps)})
+                            pg.wait_for_timeout(25)
+                        cdp.send("Input.dispatchTouchEvent",
+                                 {"type": "touchEnd", "touchPoints": []})
+                        pg.wait_for_timeout(280)
+
+                    # the axis tick numbers are the user-visible proof of the view span
+                    AX = r"""(s) => {const v = [...document.querySelectorAll(s + ' text')]
+                        .map(t => t.textContent.replace(/[,\s]/g, ''))
+                        .filter(t => /^[\d.]+[km]?$/i.test(t))
+                        .map(t => {const m = t.toLowerCase();
+                          return parseFloat(m) * (m.endsWith('k') ? 1e3
+                            : m.endsWith('m') ? 1e6 : 1);});
+                        return v.length ? [Math.min(...v), Math.max(...v)] : null;}"""
+                    for sel in ("#scatter", "#wiki"):
+                        el = pg.locator(sel)
+                        el.scroll_into_view_if_needed()
+                        pg.wait_for_timeout(250)
+                        a0 = pg.evaluate(AX, sel)
+                        pinch(el.bounding_box(), out=True)
+                        a1 = pg.evaluate(AX, sel)
+                        if check(a0 and a1, f"{tag}: {sel} has no numeric axis ticks"):
+                            span0, span1 = a0[1] / a0[0], a1[1] / a1[0]
+                            check(span1 < span0 * 0.7,
+                                  f"{tag}: pinch did not zoom {sel} - axis span "
+                                  f"{a0} to {a1}")
+                        pinch(el.bounding_box(), out=False)
+                        a2 = pg.evaluate(AX, sel)
+                        if a2:
+                            check(a2[1] / a2[0] > a1[1] / a1[0] * 1.4,
+                                  f"{tag}: pinching in did not zoom {sel} back out - "
+                                  f"axis span {a1} to {a2}")
+
                 ctx.close()
             b.close()
     finally:
