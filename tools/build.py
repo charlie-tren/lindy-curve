@@ -57,13 +57,18 @@ def hero_svg(callouts, w=960, h=340):
     for i, (c, a) in enumerate(zip(picks, ages)):
         f = 0.05 + (a - lo) / (hi - lo) * 0.90
         x, y = L + f * (w - L - R), f2y(f)
-        dy = -15 if i % 2 == 0 else 24
-        anchor = "end" if i == len(picks) - 1 else "middle"
+        # The curve only ever descends left to right, so a label must extend RIGHTWARD
+        # from its mark, into the region where the curve is lower, and sit above the
+        # mark. Centring it ran the left half of "Ulysses" straight through the steep
+        # shoulder; putting labels below the line instead put them in the shaded fill.
+        dy = -13 if i % 2 == 0 else -28
+        anchor = "end" if i == len(picks) - 1 else "start"
+        lx = x + (0 if anchor == "end" else 7)
         # the detail rides on data attributes rather than a <title>, which the browser
         # would show as its own tooltip in the moment before the page script runs
         o.append(f'<circle class="mk" cx="{x:.1f}" cy="{y:.1f}" r="4.5" '
                  f'data-title="{c["t"][:70]}" data-dl="{c["d"]:,}"/>')
-        o.append(f'<text class="mkl" x="{x:.1f}" y="{y + dy:.1f}" '
+        o.append(f'<text class="mkl" x="{lx:.1f}" y="{y + dy:.1f}" '
                  f'text-anchor="{anchor}">{c["n"]}</text>')
 
     tx = L + 0.66 * (w - L - R)

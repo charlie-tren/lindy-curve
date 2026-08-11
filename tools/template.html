@@ -47,6 +47,7 @@ a{color:var(--gilt);text-underline-offset:3px}
   display:inline-flex;align-items:center;gap:.45rem;transition:color .2s,border-color .2s}
 .tog:hover{color:var(--ink);border-color:var(--gilt)}
 .tog .dot{width:7px;height:7px;border-radius:50%;background:var(--gilt)}
+.mastr{display:inline-flex;align-items:center;gap:1.15rem}
 .mast{display:flex;align-items:baseline;justify-content:space-between;gap:1.15rem;
       flex-wrap:wrap;border-bottom:1px solid var(--rule);padding-bottom:.8rem}
 .wm{font:400 clamp(26px,5vw,36px)/1 var(--body);font-variant:small-caps;
@@ -128,8 +129,7 @@ figure svg{user-select:none;-webkit-user-select:none}
 #scatter,#wiki{cursor:crosshair;touch-action:none}
 #scatter.drag,#wiki.drag{cursor:grabbing}
 footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
-       display:flex;align-items:baseline;justify-content:space-between;gap:1.15rem;
-       flex-wrap:wrap;font-size:.88rem;color:var(--dim)}
+       font-size:.88rem;color:var(--dim)}
 
 .g{stroke:var(--rule);stroke-width:1}
 .ax{font:400 10px var(--mono);fill:var(--dim)}
@@ -140,7 +140,7 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
 .cvf{fill:var(--gilt);opacity:.09}
 .mk{fill:var(--ox)}
 .mkl{font:400 10.5px var(--body);fill:var(--ink);paint-order:stroke;
-     stroke:var(--ground);stroke-width:3px;stroke-linejoin:round}
+     stroke:var(--ground);stroke-width:4.5px;stroke-linejoin:round}
 .note{font:italic 400 12.5px var(--body);fill:var(--dim)}
 .lead{stroke:var(--dim);stroke-width:1}
 .pt{fill:var(--gilt)}
@@ -170,8 +170,12 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
 
 <header class="mast">
   <span class="wm">The Lindy Effect</span>
-  <button class="tog" id="tog" type="button" aria-label="Switch to the dark theme">
-    <span class="dot"></span><span id="togl">Dark</span></button>
+  <span class="mastr">
+    <a class="back" href="https://charlietrenorden.com/"><span class="arw">&#8592;</span>
+      Other projects</a>
+    <button class="tog" id="tog" type="button" aria-label="Switch to the dark theme">
+      <span class="dot"></span><span id="togl">Dark</span></button>
+  </span>
 </header>
 
 <p class="lede">Homer is still read after 2,500 years; most books are forgotten inside
@@ -255,8 +259,6 @@ that survivors keep surviving can be checked. Here are %%WORKS%% books, by age.<
 </details>
 
 <footer>
-  <a class="back" href="https://charlietrenorden.com/"><span class="arw">&#8592;</span>
-    Other projects</a>
   <span>Project Gutenberg, %%WORKS%% works with a datable author. Updated %%GENERATED%%.</span>
 </footer>
 

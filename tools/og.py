@@ -65,7 +65,7 @@ color:var(--faint);border-top:1px solid var(--rule);padding-top:14px}}
 .note{{font:italic 400 13px var(--body);fill:var(--dim)}}
 .lead{{stroke:var(--dim);stroke-width:1}}
 </style></head><body>
-<div class="top"><span class="wm">The Lindy Curve</span>
+<div class="top"><span class="wm">The Lindy Effect</span>
 <span class="host">charlietrenorden.com</span></div>
 <div class="mid">
   <div class="chart">{hero.group(1)}</div>

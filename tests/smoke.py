@@ -148,6 +148,42 @@ def main():
                       f"{tag}: the dot plot does not say it is a truncated sample")
                 check("Wikipedia article" in pg.inner_text("#v-wiki"),
                       f"{tag}: the Wikipedia match rate is not disclosed on the page")
+                # Hero labels must not sit ON the curve. Twice they were merely nudged
+                # (a bigger halo, a flipped dy) when the real constraint is geometric:
+                # the curve descends left to right, so a label has to extend RIGHTWARD
+                # and sit above its mark. Measures the actual gap rather than eyeballing.
+                lab = pg.evaluate("""() => {
+                  const svg = [...document.querySelectorAll('#v-curve svg')]
+                    .find(s => s.id !== 'shelf');
+                  const cv = svg.querySelector('path.cv'), len = cv.getTotalLength();
+                  const yAt = (x) => {let lo = 0, hi = len;
+                    for (let k = 0; k < 26; k++) {const m = (lo + hi) / 2;
+                      (cv.getPointAtLength(m).x < x) ? lo = m : hi = m;}
+                    return cv.getPointAtLength(lo).y;};
+                  const out = [], boxes = [];
+                  for (const t of svg.querySelectorAll('.mkl')) {
+                    const bb = t.getBBox(); boxes.push(bb);
+                    let top = 1e9;
+                    for (let i = 0; i <= 20; i++) top = Math.min(top, yAt(bb.x + bb.width * i / 20));
+                    out.push({n: t.textContent.trim(), clear: top - (bb.y + bb.height),
+                              right: bb.x + bb.width});
+                  }
+                  let ov = 0;
+                  for (let i = 0; i < boxes.length; i++)
+                    for (let j = i + 1; j < boxes.length; j++) {
+                      const a = boxes[i], b = boxes[j];
+                      if (a.x < b.x + b.width && b.x < a.x + a.width
+                          && a.y < b.y + b.height && b.y < a.y + a.height) ov++;
+                    }
+                  return {out, ov, w: svg.viewBox.baseVal.width};
+                }""")
+                onc = [x["n"] for x in lab["out"] if x["clear"] < 1]
+                check(not onc, f"{tag}: hero labels drawn over the curve: {onc}")
+                check(lab["ov"] == 0,
+                      f"{tag}: {lab['ov']} hero labels overprint each other")
+                offr = [x["n"] for x in lab["out"] if x["right"] > lab["w"] - 4]
+                check(not offr, f"{tag}: hero labels run off the right edge: {offr}")
+
                 check(pg.locator("#v-curve svg title").count() == 0,
                       f"{tag}: hero marks still carry native <title> tooltips")
                 check("slider" not in pg.inner_text(".method"),
@@ -280,7 +316,7 @@ def main():
                     pg.wait_for_timeout(200)
 
 
-                check(pg.locator("footer a.back .arw").count() == 1,
+                check(pg.locator("header a.back .arw").count() == 1,
                       f"{tag}: the Other projects link has no arrow")
 
                 theme = pg.evaluate("document.documentElement.getAttribute('data-theme')")
