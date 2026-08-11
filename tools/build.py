@@ -49,11 +49,33 @@ def hero_svg(callouts, w=960, h=340):
         if c["a"] > 20 and c["d"] > best.get(c["a"], {"d": -1})["d"]:
             best[c["a"]] = c
     usable = [best[a] for a in sorted(best)]
-    want = min(9, len(usable))
-    idx = sorted({round(i * (len(usable) - 1) / (want - 1)) for i in range(want)})
-    picks = [usable[i] for i in idx]
-    ages = [math.log10(c["a"]) for c in picks]
-    lo, hi = min(ages), max(ages)
+
+    # SELECTION is where crowding has to be solved, not placement. Spreading evenly by
+    # INDEX through the age-sorted list put marks as little as 25px apart, and then no
+    # label position exists that is both near its own dot and clear of its neighbour -
+    # a label pushed off its neighbour reads as detached, one left near it reads as a
+    # pair. So pick by horizontal SEPARATION instead and accept fewer labels.
+    # Labels extend rightward from their mark, so a pair needs the left one's full width
+    # between them; the final label extends leftward (it would overrun the right edge
+    # otherwise), so its gap has to fit two label widths. Both ends are always kept.
+    # Swept against the rendered result: 85 keeps six labels with 43px between the
+    # closest pair, 95 drops to five. Below 85 they start reading as pairs again.
+    MINSEP, LASTSEP = 85, 150
+    ages_all = [math.log10(c["a"]) for c in usable]
+    lo, hi = min(ages_all), max(ages_all)
+    xf = lambda a: L + (0.05 + (a - lo) / (hi - lo) * 0.90) * (w - L - R)
+
+    keep = [0]
+    for i in range(1, len(usable) - 1):
+        if xf(ages_all[i]) - xf(ages_all[keep[-1]]) >= MINSEP and len(keep) < 8:
+            keep.append(i)
+    last = len(usable) - 1
+    while len(keep) > 1 and xf(ages_all[last]) - xf(ages_all[keep[-1]]) < LASTSEP:
+        keep.pop()
+    keep.append(last)
+
+    picks = [usable[i] for i in keep]
+    ages = [ages_all[i] for i in keep]
     # PLACEMENT. Each label sits as close to its mark as it can while clearing two
     # things: the curve, and the label before it. Fixed alternating offsets were the
     # earlier approach and they read as detached - half the labels floated well above a

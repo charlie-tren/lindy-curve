@@ -168,14 +168,19 @@ def main():
                     out.push({n: t.textContent.trim(), clear: top - (bb.y + bb.height),
                               right: bb.x + bb.width});
                   }
-                  let ov = 0;
+                  let ov = 0, near = 1e9;
                   for (let i = 0; i < boxes.length; i++)
                     for (let j = i + 1; j < boxes.length; j++) {
                       const a = boxes[i], b = boxes[j];
                       if (a.x < b.x + b.width && b.x < a.x + a.width
                           && a.y < b.y + b.height && b.y < a.y + a.height) ov++;
+                      const dx = Math.max(0, Math.max(a.x - (b.x + b.width),
+                                                      b.x - (a.x + a.width)));
+                      const dy = Math.max(0, Math.max(a.y - (b.y + b.height),
+                                                      b.y - (a.y + a.height)));
+                      near = Math.min(near, Math.hypot(dx, dy));
                     }
-                  return {out, ov, w: svg.viewBox.baseVal.width};
+                  return {out, ov, near, w: svg.viewBox.baseVal.width};
                 }""")
                 onc = [x["n"] for x in lab["out"] if x["clear"] < 1]
                 check(not onc, f"{tag}: hero labels drawn over the curve: {onc}")
@@ -187,6 +192,11 @@ def main():
                 far = [x["n"] for x in lab["out"] if x["clear"] > 26]
                 check(len(far) <= 2,
                       f"{tag}: hero labels floating far from the curve: {far}")
+                # and the third: two labels close enough to read as a pair rather than
+                # as two separate works. Crowding is solved in SELECTION (build.py picks
+                # marks by horizontal separation) - no placement can fix marks 25px apart.
+                check(lab["near"] > 25,
+                      f"{tag}: closest hero labels only {lab['near']:.0f}px apart")
                 offr = [x["n"] for x in lab["out"] if x["right"] > lab["w"] - 4]
                 check(not offr, f"{tag}: hero labels run off the right edge: {offr}")
 
