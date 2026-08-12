@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -173,8 +173,8 @@ footer{margin-top:3rem;padding-top:1.15rem;border-top:1px solid var(--rule);
   <span class="mastr">
     <a class="back" href="https://charlietrenorden.com/"><span class="arw">&#8592;</span>
       Other projects</a>
-    <button class="tog" id="tog" type="button" aria-label="Switch to the dark theme">
-      <span class="dot"></span><span id="togl">Dark</span></button>
+    <button class="tog" id="tog" type="button" aria-label="Switch to the light theme">
+      <span class="dot"></span><span id="togl">Light</span></button>
   </span>
 </header>
 
@@ -317,7 +317,8 @@ function setTheme(dark) {
 tog.addEventListener("click", () =>
   setTheme(document.documentElement.getAttribute("data-theme") !== "dark"));
 setTheme((function () {
-  try { return localStorage.getItem("lc-theme") === "dark"; } catch (e) { return false; }
+  try { const v = localStorage.getItem("lc-theme"); return v ? v === "dark" : true; }
+  catch (e) { return true; }
 })());
 
 /* ------------------------------------------- one tooltip implementation, four charts */

@@ -29,7 +29,10 @@ function setTheme(dark) {
 tog.addEventListener("click", () =>
   setTheme(document.documentElement.getAttribute("data-theme") !== "dark"));
 setTheme((function () {
-  try { return localStorage.getItem("lc-theme") === "dark"; } catch (e) { return false; }
+  // Dark by default. Only an explicit stored choice can turn it light, so a first
+  // visit gets dark and a returning visitor keeps whatever they picked.
+  try { const v = localStorage.getItem("lc-theme"); return v ? v === "dark" : true; }
+  catch (e) { return true; }
 })());
 
 /* ------------------------------------------- one tooltip implementation, four charts */
